@@ -11,3 +11,7 @@ Engine de corrida que usa as regras de `regras/regras_de_controle_de_volume.xlsx
 python3 -I tests/planilha_valores.py regras/regras_de_controle_de_volume.xlsx   # precisa de openpyxl
 node tests/test_engine.js
 ```
+
+## Método
+
+- `metodo/periodizacao.html`: guia de periodização por modalidade e combinações (publicado como artifact).

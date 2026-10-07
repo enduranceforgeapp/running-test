@@ -1,0 +1,1032 @@
+<title>Endurance Forge Periodização</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: guia de método em coluna única. Abre com a "lente de zoom" (macro → meso → micro → sessão),
+   segue com princípios, zonas e distribuição, e chega às modalidades e combinações em abas, cada uma com
+   macrociclo, semana-tipo e regras. Cor de modalidade = matiz; intensidade = densidade de tinta. */
+:root {
+  color-scheme: light;
+  --bg: #eef3f9;
+  --surface: #ffffff;
+  --surface-2: #f5f8fc;
+  --ink: #0f1b2d;
+  --muted: #50607a;
+  --faint: #8594ab;
+  --line: #d6e0ec;
+  --accent-text: #0a5fcf;
+  --focus: #2a78d6;
+  --swim: #2a78d6;
+  --bike: #eb6834;
+  --run: #1baf7a;
+  --gym: #4a3aa7;
+  --end: #8a97a9;
+  --swim-ink: #ffffff;
+  --bike-ink: #0f1b2d;
+  --run-ink: #0f1b2d;
+  --gym-ink: #ffffff;
+  --end-ink: #0f1b2d;
+  --z1: #a9b6c6;
+  --z2: #6b7f99;
+  --z3: #2d3e57;
+  --z1-ink: #0f1b2d;
+  --z2-ink: #ffffff;
+  --z3-ink: #ffffff;
+  --ph1: #e2e8f0;
+  --ph2: #c9d3df;
+  --ph3: #aebccd;
+  --ph4: #93a3b8;
+  --ok-bg: #dff2e5;
+  --ok-ink: #1f6b3a;
+  --mid-bg: #fdf0d8;
+  --mid-ink: #8a4b06;
+  --no-bg: #fbe3e3;
+  --no-ink: #9f1d1d;
+  --tip-bg: #0f1b2d;
+  --tip-ink: #eef3f9;
+  --shadow: 0 1px 2px rgba(15, 27, 45, .05), 0 6px 18px rgba(15, 27, 45, .06);
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", system-ui, sans-serif;
+  --body: "Barlow", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #07111f; --surface: #0c1a2e; --surface-2: #102139; --ink: #e8f0fb; --muted: #9fb1cb; --faint: #6c7f9c;
+    --line: #22385a; --accent-text: #6cb0ff; --focus: #6da7ec;
+    --swim: #3987e5; --bike: #d95926; --run: #199e70; --gym: #9085e9; --end: #5d6d84;
+    --swim-ink: #07111f; --bike-ink: #07111f; --run-ink: #07111f; --gym-ink: #07111f; --end-ink: #ffffff;
+    --z1: #42536b; --z2: #7f93ae; --z3: #d3dcea; --z1-ink: #e8f0fb; --z2-ink: #07111f; --z3-ink: #07111f;
+    --ph1: #142640; --ph2: #1d3354; --ph3: #284266; --ph4: #36537b;
+    --ok-bg: #16301f; --ok-ink: #7fd494; --mid-bg: #2d2412; --mid-ink: #f5c77e; --no-bg: #3a1a1a; --no-ink: #ffb3b3;
+    --tip-bg: #e8f0fb; --tip-ink: #07111f; --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #07111f; --surface: #0c1a2e; --surface-2: #102139; --ink: #e8f0fb; --muted: #9fb1cb; --faint: #6c7f9c;
+  --line: #22385a; --accent-text: #6cb0ff; --focus: #6da7ec;
+  --swim: #3987e5; --bike: #d95926; --run: #199e70; --gym: #9085e9; --end: #5d6d84;
+  --swim-ink: #07111f; --bike-ink: #07111f; --run-ink: #07111f; --gym-ink: #07111f; --end-ink: #ffffff;
+  --z1: #42536b; --z2: #7f93ae; --z3: #d3dcea; --z1-ink: #e8f0fb; --z2-ink: #07111f; --z3-ink: #07111f;
+  --ph1: #142640; --ph2: #1d3354; --ph3: #284266; --ph4: #36537b;
+  --ok-bg: #16301f; --ok-ink: #7fd494; --mid-bg: #2d2412; --mid-ink: #f5c77e; --no-bg: #3a1a1a; --no-ink: #ffb3b3;
+  --tip-bg: #e8f0fb; --tip-ink: #07111f; --shadow: none;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-behavior: smooth; scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 64px); }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 16px/1.55 var(--body); font-variant-numeric: tabular-nums; }
+h1, h2, h3 { font-family: var(--display); font-weight: 700; line-height: 1.05; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(40px, 6.4vw, 68px); letter-spacing: .005em; }
+h2 { font-size: clamp(28px, 3.6vw, 36px); }
+h3 { font-size: 22px; font-weight: 600; }
+p { margin: 0; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.mono { font-family: var(--mono); font-size: .86em; }
+.eyebrow { font-size: 12.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+
+.page { max-width: 1140px; margin: 0 auto; padding-inline: 24px; padding-block: 32px 72px; display: grid; gap: 64px; }
+@media (max-width: 700px) { .page { padding-inline: 16px; gap: 48px; } }
+section { display: grid; gap: 20px; min-width: 0; }
+.head { display: grid; gap: 8px; max-width: 74ch; }
+.head p { color: var(--muted); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); padding: 20px; display: grid; gap: 16px; min-width: 0; }
+@media (max-width: 560px) { .panel { padding: 16px; } }
+
+/* ---------- Cabeçalho ---------- */
+header.hero { display: grid; gap: 28px; }
+.hero-top { display: grid; gap: 14px; max-width: 72ch; }
+.hero-top .lede { font-size: 19px; color: var(--muted); }
+.hero-top .lede b { color: var(--ink); font-weight: 600; }
+.byline { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14px; color: var(--muted); }
+.byline span { display: inline-flex; align-items: center; gap: 6px; }
+.byline i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+.zoom { display: grid; gap: 0; }
+.zrow { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 16px; align-items: center; padding-block: 12px; border-top: 1px solid var(--line); }
+.zrow:last-child { border-bottom: 1px solid var(--line); }
+@media (max-width: 640px) { .zrow { grid-template-columns: minmax(0, 1fr); gap: 8px; } }
+.zlabel b { display: block; font-family: var(--display); font-size: 22px; font-weight: 700; line-height: 1.05; }
+.zlabel span { font-size: 13px; color: var(--muted); }
+.weeks18 { display: grid; grid-template-columns: repeat(18, minmax(0, 1fr)); gap: 3px; }
+.weeks18 span { height: 30px; border-radius: 3px; position: relative; }
+.weeks18 .sel { outline: 2px solid var(--ink); outline-offset: 1px; z-index: 1; }
+.phase-key { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+.phase-key span { display: inline-flex; align-items: center; gap: 6px; }
+.phase-key i { width: 12px; height: 12px; border-radius: 2px; display: inline-block; border: 1px solid var(--line); }
+.meso { display: flex; align-items: flex-end; gap: 6px; height: 64px; max-width: 360px; }
+.meso div { flex: 1; display: grid; gap: 4px; align-items: end; height: 100%; }
+.meso span { display: block; background: var(--z2); border-radius: 3px 3px 0 0; }
+.meso small { font-size: 11.5px; color: var(--muted); text-align: center; }
+.meso .sel span { outline: 2px solid var(--ink); outline-offset: 1px; }
+.micro { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; max-width: 560px; }
+.micro div { border: 1px solid var(--line); border-radius: 6px; padding: 5px 6px; display: grid; gap: 3px; min-height: 58px; align-content: start; background: var(--surface); }
+.micro div.sel { outline: 2px solid var(--ink); outline-offset: 1px; }
+.micro b { font-size: 11.5px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+.micro i { display: block; height: 7px; border-radius: 2px; }
+.sessbar { display: flex; height: 34px; gap: 2px; border-radius: 5px; overflow: hidden; max-width: 560px; }
+.sessbar span { display: flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 600; overflow: hidden; white-space: nowrap; min-width: 0; }
+.zoom-note { font-size: 13px; color: var(--muted); margin-top: 6px; }
+
+nav.toc { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); margin-inline: -24px; padding: 10px 24px; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+nav.toc::-webkit-scrollbar { display: none; }
+@media (max-width: 700px) { nav.toc { margin-inline: -16px; padding-inline: 16px; } }
+nav.toc a { flex: none; font-size: 14px; font-weight: 600; color: var(--muted); text-decoration: none; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); }
+nav.toc a:hover { color: var(--ink); border-color: var(--faint); }
+
+/* ---------- Princípios ---------- */
+.steps { list-style: none; margin: 0; padding: 0; counter-reset: s; display: grid; gap: 0; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 4px 16px; padding-block: 18px; border-top: 1px solid var(--line); }
+.steps li::before { content: counter(s); font-family: var(--display); font-weight: 700; font-size: 40px; line-height: .9; color: var(--faint); grid-row: span 2; }
+.steps h3 { font-size: 23px; }
+.steps p { color: var(--muted); max-width: 72ch; }
+.steps p b { color: var(--ink); font-weight: 600; }
+
+.chart { position: relative; min-width: 0; }
+.chart-scroll { overflow-x: auto; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart text { font-family: var(--body); fill: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13.5px; color: var(--muted); margin: 0; padding: 0; list-style: none; }
+.legend li { display: inline-flex; align-items: center; gap: 7px; }
+.sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; flex: none; }
+.note { font-size: 13px; color: var(--muted); }
+.tip { position: fixed; z-index: 20; pointer-events: none; background: var(--tip-bg); color: var(--tip-ink); padding: 7px 10px; border-radius: 7px; font-size: 13px; line-height: 1.35; max-width: 280px; box-shadow: 0 6px 18px rgba(0,0,0,.18); }
+
+/* Zonas */
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+th, td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+th { font-size: 12px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); background: var(--surface-2); font-weight: 600; white-space: nowrap; }
+table.zones { min-width: 900px; }
+table.zones td:first-child { width: 92px; }
+.zchip { display: inline-flex; align-items: center; justify-content: center; min-width: 34px; padding: 2px 7px; border-radius: 5px; font: 600 12.5px var(--mono); }
+.zchip.Z1 { background: var(--z1); color: var(--z1-ink); }
+.zchip.Z2 { background: var(--z2); color: var(--z2-ink); }
+.zchip.Z3 { background: var(--z3); color: var(--z3-ink); }
+.zchip.F { background: var(--gym); color: var(--gym-ink); }
+td small { display: block; color: var(--muted); font-size: 13px; }
+
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; background: var(--surface); }
+.seg button { border: 0; background: none; padding: 8px 14px; font-size: 14.5px; font-weight: 600; color: var(--muted); cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"], .seg button[aria-selected="true"] { background: var(--ink); color: var(--bg); }
+.callout { border-left: 4px solid var(--ink); background: var(--surface-2); border-radius: 0 8px 8px 0; padding: 12px 14px; font-size: 15px; }
+.callout b { font-weight: 600; }
+
+/* ---------- Abas de modalidade e combinação ---------- */
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.tabs button {
+  border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 7px 14px 7px 10px; cursor: pointer;
+  font-weight: 600; font-size: 15px; color: var(--ink); display: inline-flex; align-items: center; gap: 8px;
+}
+.tabs button i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.tabs button .dots { display: inline-flex; gap: 2px; }
+.tabs button .dots i { width: 8px; height: 8px; }
+.tabs button[aria-selected="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.tabs button:hover { border-color: var(--faint); }
+.sport-head { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 20px; }
+@media (max-width: 820px) { .sport-head { grid-template-columns: minmax(0, 1fr); } }
+.sport-head h3 { font-size: 30px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+.sport-head h3 i { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+.sport-head .why { color: var(--muted); margin-top: 8px; max-width: 64ch; }
+dl.facts { margin: 0; display: grid; gap: 10px; align-content: start; }
+dl.facts div { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 10px; font-size: 14.5px; }
+dl.facts dt { color: var(--muted); font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; font-weight: 600; padding-top: 2px; }
+dl.facts dd { margin: 0; }
+.cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+@media (max-width: 820px) { .cols { grid-template-columns: minmax(0, 1fr); } }
+.sub { font-family: var(--display); font-weight: 600; font-size: 20px; }
+.phase-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 820px) { .phase-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.phase-card { border-radius: 8px; padding: 10px 12px; display: grid; gap: 4px; align-content: start; border: 1px solid var(--line); }
+.phase-card b { font-family: var(--display); font-size: 18px; font-weight: 700; display: flex; justify-content: space-between; gap: 8px; }
+.phase-card b small { font-family: var(--body); font-size: 12.5px; font-weight: 500; color: var(--muted); }
+.phase-card p { font-size: 13.5px; color: var(--muted); }
+.phase-card .bar { height: 5px; border-radius: 3px; }
+
+.keys { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.keys li { display: grid; gap: 2px; padding-left: 14px; border-left: 3px solid var(--c); }
+.keys b { font-weight: 600; }
+.keys span { color: var(--muted); font-size: 14.5px; }
+ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 7px; font-size: 15px; }
+ul.plain li::marker { color: var(--faint); }
+ul.plain b { font-weight: 600; }
+
+/* Semana-tipo */
+.week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.day { display: grid; gap: 6px; align-content: start; min-width: 0; }
+.day > b { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; padding-left: 2px; }
+.sess { border: 1px solid var(--line); border-left: 4px solid var(--c); border-radius: 7px; background: var(--surface); padding: 7px 8px; display: grid; gap: 4px; min-width: 0; }
+.sess .sp { font-size: 11px; letter-spacing: .07em; text-transform: uppercase; font-weight: 600; color: var(--muted); display: flex; justify-content: space-between; gap: 4px; }
+.sess .t { font-size: 13.5px; line-height: 1.3; font-weight: 500; overflow-wrap: anywhere; }
+.sess .m { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 12.5px; color: var(--muted); }
+.sess.brick { border-style: dashed; border-left-style: solid; }
+.rest { border: 1px dashed var(--line); border-radius: 7px; padding: 7px 8px; font-size: 13px; color: var(--faint); }
+@media (max-width: 760px) {
+  .week { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .day { grid-template-columns: 54px minmax(0, 1fr); gap: 8px; padding-block: 8px; border-top: 1px solid var(--line); }
+  .day > b { padding-top: 8px; }
+  .day .stack { display: grid; gap: 6px; }
+}
+.week-meta { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 14px; color: var(--muted); }
+.week-meta b { color: var(--ink); font-weight: 600; }
+
+/* Matriz */
+table.matrix { min-width: 760px; font-size: 13px; }
+table.matrix th, table.matrix td { padding: 0; border: 1px solid var(--line); text-align: center; }
+table.matrix thead th { padding: 8px 4px; white-space: normal; font-size: 11px; line-height: 1.2; vertical-align: bottom; min-width: 64px; }
+table.matrix tbody th { padding: 6px 10px; text-align: left; white-space: nowrap; text-transform: none; letter-spacing: 0; font-size: 13px; color: var(--ink); background: var(--surface-2); }
+table.matrix th i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+.cell { width: 100%; height: 36px; border: 0; cursor: pointer; font: 600 15px var(--body); display: grid; place-items: center; }
+.cell.ok { background: var(--ok-bg); color: var(--ok-ink); }
+.cell.mid { background: var(--mid-bg); color: var(--mid-ink); }
+.cell.no { background: var(--no-bg); color: var(--no-ink); }
+.cell[aria-pressed="true"] { outline: 2px solid var(--ink); outline-offset: -3px; }
+.verdict { border-radius: 9px; padding: 12px 14px; display: grid; gap: 4px; }
+.verdict.ok { background: var(--ok-bg); color: var(--ok-ink); }
+.verdict.mid { background: var(--mid-bg); color: var(--mid-ink); }
+.verdict.no { background: var(--no-bg); color: var(--no-ink); }
+.verdict b { font-weight: 600; }
+.verdict span { color: var(--ink); }
+.mkey { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 14px; }
+.mkey span { display: inline-flex; align-items: center; gap: 8px; }
+.mkey em { font-style: normal; width: 26px; height: 22px; border-radius: 5px; display: inline-grid; place-items: center; font-weight: 700; }
+
+/* Carga */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 8px; align-content: start; }
+.card h3 { font-size: 20px; }
+.card p { color: var(--muted); font-size: 15px; }
+.card .big { font-family: var(--display); font-weight: 700; font-size: 30px; line-height: 1; color: var(--ink); }
+.card .big small { font-family: var(--body); font-size: 14px; font-weight: 500; color: var(--muted); }
+
+.recs { display: grid; gap: 0; }
+.rec { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 8px 24px; padding-block: 16px; border-top: 1px solid var(--line); }
+@media (max-width: 760px) { .rec { grid-template-columns: minmax(0, 1fr); } }
+.rec h3 { font-size: 21px; }
+.rec .now { font-size: 14px; color: var(--muted); margin-top: 4px; }
+.rec p { font-size: 15px; }
+.refs { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: 14px; color: var(--muted); }
+.refs i { color: var(--ink); }
+footer { font-size: 13px; color: var(--faint); border-top: 1px solid var(--line); padding-top: 16px; }
+</style>
+
+<div class="page">
+  <header class="hero">
+    <div class="hero-top">
+      <p class="eyebrow">Endurance Forge · método</p>
+      <h1>Como eu periodizo cada modalidade e as combinações</h1>
+      <p class="lede">Planejo <b>de cima para baixo</b>. A prova define o macrociclo, o macrociclo define os mesociclos, e só então escrevo a semana e a sessão. A modalidade muda as restrições (impacto, técnica, tempo de recuperação). A lógica continua a mesma.</p>
+      <div class="byline" aria-label="Modalidades cobertas">
+        <span><i style="background:var(--run)"></i>Corrida</span>
+        <span><i style="background:var(--bike)"></i>Ciclismo</span>
+        <span><i style="background:var(--swim)"></i>Natação</span>
+        <span><i style="background:var(--gym)"></i>Força</span>
+      </div>
+    </div>
+    <div class="zoom" aria-label="Exemplo dos quatro níveis de planejamento, de uma maratona de 18 semanas até uma sessão de limiar">
+      <div class="zrow">
+        <div class="zlabel"><b>Macrociclo</b><span>18 semanas até a maratona</span></div>
+        <div><div class="weeks18" id="z-weeks"></div><div class="phase-key" id="z-key"></div></div>
+      </div>
+      <div class="zrow">
+        <div class="zlabel"><b>Mesociclo</b><span>3 semanas de carga, 1 de alívio</span></div>
+        <div class="meso" id="z-meso"></div>
+      </div>
+      <div class="zrow">
+        <div class="zlabel"><b>Microciclo</b><span>a semana 11</span></div>
+        <div class="micro" id="z-micro"></div>
+      </div>
+      <div class="zrow">
+        <div class="zlabel"><b>Sessão</b><span>terça · limiar, 60 min</span></div>
+        <div><div class="sessbar" id="z-sess"></div><p class="zoom-note">Aquecimento, 3 × 10 min no ritmo de limiar com 2 min de trote, volta à calma. Cada nível só existe para servir o de cima.</p></div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="toc" aria-label="Seções">
+    <a href="#metodo">Método</a><a href="#zonas">Zonas</a><a href="#distribuicao">Distribuição</a><a href="#modalidades">Modalidades</a>
+    <a href="#combinacoes">Combinações</a><a href="#compatibilidade">Compatibilidade</a><a href="#carga">Carga integrada</a>
+    <a href="#forge">Na Endurance Forge</a><a href="#referencias">Referências</a>
+  </nav>
+
+  <section id="metodo">
+    <div class="head">
+      <p class="eyebrow">Método</p>
+      <h2>As cinco decisões, nesta ordem</h2>
+      <p>Antes de abrir qualquer planilha, respondo cinco perguntas. A ordem importa: cada resposta restringe a seguinte.</p>
+    </div>
+    <ol class="steps">
+      <li><h3>Qual é a demanda da prova?</h3><p>Duração e intensidade relativa ao limiar definem o que precisa ser treinado. Um 5 km é corrido acima do limiar anaeróbio; um Ironman, perto do limiar aeróbio. <b>Quanto mais longa a prova, mais o plano gira em torno de volume em Z1 e durabilidade</b>; quanto mais curta, mais pesa o tempo acima do limiar.</p></li>
+      <li><h3>Quem é o atleta hoje?</h3><p>Limiares (LT1 e LT2, ou VDOT, FTP e CSS), volume crônico das últimas 4 a 8 semanas, histórico de lesão, idade e horas realmente disponíveis. <b>Planejo a partir do volume crônico, nunca do pico</b> que o atleta já fez um dia.</p></li>
+      <li><h3>Como distribuo a intensidade?</h3><p>Escolho o modelo (polarizado, piramidal ou de limiar) por fase e por horas de treino. É a decisão com mais evidência e a que mais erro vejo na prática: <b>sessões leves rápidas demais e sessões fortes lentas demais</b>.</p></li>
+      <li><h3>Como a carga progride?</h3><p>Uma unidade de carga para tudo (sRPE ou TSS), progressão por mesociclo e alívio programado. <b>Volume e intensidade não sobem na mesma semana.</b> A corrida tem teto de progressão próprio por causa do impacto.</p></li>
+      <li><h3>Como chego descansado sem perder a forma?</h3><p>Polimento de 1 a 3 semanas conforme a prova: <b>reduzo volume em 40% a 60%, mantenho intensidade e frequência</b>. É a fase em que o atleta mais erra por ansiedade.</p></li>
+    </ol>
+    <div class="panel">
+      <div class="head" style="gap:4px">
+        <h3>Demanda de cada prova</h3>
+        <p class="note">Intensidade típica de um amador treinado, em % do limiar da própria modalidade (velocidade na corrida e na natação, potência no ciclismo). Valores aproximados.</p>
+      </div>
+      <ul class="legend" aria-hidden="true">
+        <li><span class="sw" style="background:var(--run);border-radius:50%"></span>Corrida</li>
+        <li><span class="sw" style="background:var(--bike);border-radius:50%"></span>Ciclismo</li>
+        <li><span class="sw" style="background:var(--swim);border-radius:50%"></span>Natação</li>
+        <li><span class="sw" style="background:var(--z3);opacity:.35"></span>Faixa Z3 · acima do limiar</li>
+        <li><span class="sw" style="background:var(--z2);opacity:.35"></span>Faixa Z2 · entre os limiares</li>
+        <li><span class="sw" style="background:var(--z1);opacity:.45"></span>Faixa Z1 · perto do LT1</li>
+      </ul>
+      <div class="chart chart-scroll" id="demand" role="img" aria-label="Gráfico de dispersão: duração da prova em escala logarítmica contra intensidade relativa ao limiar. Os valores estão na tabela logo abaixo."></div>
+      <details><summary class="note" style="cursor:pointer">Ver os valores em tabela</summary><div class="table-wrap" style="margin-top:8px"><table id="demand-table"></table></div></details>
+    </div>
+  </section>
+
+  <section id="zonas">
+    <div class="head">
+      <p class="eyebrow">Zonas</p>
+      <h2>Uma linguagem para todas as modalidades</h2>
+      <p>Uso o modelo de três zonas, ancorado nos dois limiares. Cada modalidade tem a sua métrica, mas a fisiologia de cada zona é a mesma. É isso que permite somar e combinar modalidades sem confusão.</p>
+    </div>
+    <div class="table-wrap">
+      <table class="zones">
+        <thead><tr><th>Zona</th><th>Fisiologia</th><th>Percepção</th><th>Corrida</th><th>Ciclismo</th><th>Natação</th><th>Tempo no polarizado</th></tr></thead>
+        <tbody>
+          <tr><td><span class="zchip Z1">Z1</span></td><td>Abaixo do LT1 / VT1<small>lactato perto do repouso</small></td><td>PSE 1 a 4<small>conversa solta</small></td><td>Daniels E<small>rodagem, longão · CL</small></td><td>até ~75% do FTP<small>Coggan Z1 e Z2</small></td><td>mais lento que CSS + 8 s/100 m</td><td><b>75% a 80%</b></td></tr>
+          <tr><td><span class="zchip Z2">Z2</span></td><td>Entre LT1 e LT2<small>lactato sobe, mas estabiliza</small></td><td>PSE 5 e 6<small>frases curtas</small></td><td>Daniels M e T<small>ritmo de maratona, limiar · CM, CF, IL</small></td><td>76% a 105% do FTP<small>Z3 e Z4; sweet spot 88% a 94%</small></td><td>de CSS + 8 s até a CSS</td><td><b>5% a 10%</b></td></tr>
+          <tr><td><span class="zchip Z3">Z3</span></td><td>Acima do LT2 / potência crítica<small>VO2máx e capacidade anaeróbia</small></td><td>PSE 7 a 10<small>palavras soltas</small></td><td>Daniels I e R<small>intervalado, repetições · IM, IF</small></td><td>acima de 105% do FTP<small>Coggan Z5 a Z7</small></td><td>mais rápido que a CSS</td><td><b>15% a 20%</b></td></tr>
+          <tr><td><span class="zchip F">F</span></td><td>Carga neuromuscular<small>fora do modelo aeróbio</small></td><td>PSE da série<small>2 a 3 repetições em reserva</small></td><td colspan="3">Medida em séries pesadas por semana e %1RM. Conta na carga total (sRPE), mas não na distribuição de intensidade aeróbia.</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">CL, CM, CF e IL, IM, IF são as siglas que vocês já usam na engine de corrida, posicionadas onde eu as leio.</p>
+  </section>
+
+  <section id="distribuicao">
+    <div class="head">
+      <p class="eyebrow">Distribuição de intensidade</p>
+      <h2>Quanto tempo em cada zona, fase a fase</h2>
+      <p>Porcentagem do tempo de treino aeróbio em cada zona. A força fica de fora porque não é medida em zonas.</p>
+    </div>
+    <div class="panel">
+      <div class="seg" role="group" aria-label="Modelo de distribuição" id="dist-seg">
+        <button type="button" data-model="polarizado" aria-pressed="true">Polarizado</button>
+        <button type="button" data-model="piramidal" aria-pressed="false">Piramidal</button>
+        <button type="button" data-model="limiar" aria-pressed="false">Limiar</button>
+      </div>
+      <ul class="legend" aria-hidden="true">
+        <li><span class="sw" style="background:var(--z1)"></span>Z1 · abaixo do LT1</li>
+        <li><span class="sw" style="background:var(--z2)"></span>Z2 · entre os limiares</li>
+        <li><span class="sw" style="background:var(--z3)"></span>Z3 · acima do LT2</li>
+      </ul>
+      <div class="chart" id="dist" role="img" aria-label="Barras empilhadas com o tempo em Z1, Z2 e Z3 em cada fase, para o modelo escolhido."></div>
+      <p class="callout" id="dist-note"></p>
+    </div>
+  </section>
+
+  <section id="modalidades">
+    <div class="head">
+      <p class="eyebrow">Modalidades isoladas</p>
+      <h2>Cada modalidade, com as suas restrições</h2>
+      <p>Para cada uma: o que limita o desempenho, o macrociclo de um exemplo real, a semana-tipo de um atleta intermediário na fase de construção e as sessões que não negocio.</p>
+    </div>
+    <div class="tabs" role="tablist" aria-label="Modalidade" id="sport-tabs"></div>
+    <div class="panel" id="sport-panel" role="tabpanel"></div>
+  </section>
+
+  <section id="combinacoes">
+    <div class="head">
+      <p class="eyebrow">Combinações</p>
+      <h2>Quando as modalidades dividem a mesma semana</h2>
+      <p>Combinar não é somar planos. As modalidades disputam o mesmo tempo, a mesma recuperação e, no caso das pernas, a mesma musculatura. Primeiro divido o tempo entre elas por fase; depois encaixo os dias pela matriz de compatibilidade.</p>
+    </div>
+    <div class="tabs" role="tablist" aria-label="Combinação" id="combo-tabs"></div>
+    <div class="panel" id="combo-panel" role="tabpanel"></div>
+  </section>
+
+  <section id="compatibilidade">
+    <div class="head">
+      <p class="eyebrow">Compatibilidade</p>
+      <h2>O que pode dividir o mesmo dia</h2>
+      <p>Linha é a primeira sessão do dia, coluna é a segunda. A ordem muda a resposta: força pesada depois da corrida intensa funciona; antes, não. Toque numa célula para ver o motivo.</p>
+    </div>
+    <div class="panel">
+      <div class="mkey" aria-hidden="true">
+        <span><em class="cell ok" style="width:26px;height:22px">✓</em>Combina</span>
+        <span><em class="cell mid" style="width:26px;height:22px">◷</em>Com condição (intervalo, fase ou nível)</span>
+        <span><em class="cell no" style="width:26px;height:22px">✕</em>Evito</span>
+      </div>
+      <div class="table-wrap"><table class="matrix" id="matrix"></table></div>
+      <div class="verdict" id="verdict" aria-live="polite"></div>
+      <div class="cols">
+        <div>
+          <p class="sub">Entre dias seguidos</p>
+          <ul class="plain">
+            <li><b>Força pesada de pernas → sessão-chave:</b> 48 h para corrida, 24 h para bike.</li>
+            <li><b>Longão de corrida → próxima intensidade de corrida:</b> 48 a 72 h.</li>
+            <li><b>Z3 → Z3 da mesma modalidade:</b> pelo menos 48 h.</li>
+            <li><b>Brick ou simulação de prova:</b> dia seguinte leve ou descanso.</li>
+          </ul>
+        </div>
+        <div>
+          <p class="sub">Por que concentro o estresse</p>
+          <p class="note" style="font-size:15px">Com várias modalidades, prefiro dias duros de verdade (duas sessões fortes, com 4 a 6 h entre elas) e dias leves de verdade. Espalhar uma sessão forte por dia deixa o atleta sempre meio cansado e nenhuma sessão sai com a qualidade que deveria.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="carga">
+    <div class="head">
+      <p class="eyebrow">Carga integrada</p>
+      <h2>Uma moeda, mas com tetos por modalidade</h2>
+      <p>Somo a carga de todas as modalidades para controlar a fadiga total. Mas a soma não basta: a corrida tem limite próprio, porque o osso e o tendão se adaptam mais devagar que o coração.</p>
+    </div>
+    <div class="cards">
+      <div class="card"><h3>Moeda comum</h3><p class="big">sRPE <small>= PSE × minutos</small></p><p>Vale para todas as modalidades e para a força. Quando há potência ou ritmo confiável, uso TSS (rTSS, TSS, sTSS) e acompanho CTL, ATL e TSB pelo modelo de Banister.</p></div>
+      <div class="card"><h3>Teto de impacto</h3><p class="big">≤ 10% <small>por semana na corrida, em média</small></p><p>E nenhum salto acima de ~30% em duas semanas. No triathlon longo, a corrida fica em 20% a 25% da carga total, mesmo que o atleta tenha tempo para mais.</p></div>
+      <div class="card"><h3>Rampa da carga total</h3><p class="big">+3 a +5 <small>CTL por semana, amador</small></p><p>Treinados toleram +5 a +7. Acima de +8, só em blocos curtos, seguidos de alívio de 30% a 40%.</p></div>
+      <div class="card"><h3>Transferência</h3><p class="big">60′ bike ≈ 40–45′ <small>de corrida leve</small></p><p>Em carga aeróbia, por TSS. A bike constrói o motor, mas não substitui a resistência muscular específica do longão.</p></div>
+      <div class="card"><h3>Dia da prova</h3><p class="big">TSB +10 a +25</p><p>Na prova A, calibrado pelo histórico do atleta. Abaixo disso, ainda cansado; muito acima, já perdendo condicionamento.</p></div>
+      <div class="card"><h3>Quando mudo o plano</h3><p class="big">3 dias</p><p>De VFC (rMSSD, média de 7 dias) abaixo da faixa normal junto com PSE alta ou sono ruim: troco a próxima intensidade por Z1. O ACWR uso só como alerta, nunca como regra (Impellizzeri, 2020).</p></div>
+    </div>
+  </section>
+
+  <section id="forge">
+    <div class="head">
+      <p class="eyebrow">Na Endurance Forge</p>
+      <h2>O que eu ajustaria nas regras atuais</h2>
+      <p>Comparei este método com as regras que já estão nas engines. A maior parte conversa bem; estes são os pontos em que eu mexeria.</p>
+    </div>
+    <div class="recs" id="recs"></div>
+  </section>
+
+  <section id="referencias">
+    <div class="head"><p class="eyebrow">Base científica</p><h2>Referências</h2></div>
+    <ol class="refs">
+      <li>Seiler S. What is best practice for training intensity and duration distribution in endurance athletes? <i>Int J Sports Physiol Perform</i>, 2010.</li>
+      <li>Stöggl T, Sperlich B. Polarized training has greater impact on key endurance variables than threshold, high intensity, or high volume training. <i>Front Physiol</i>, 2014.</li>
+      <li>Issurin VB. New horizons for the methodology and physiology of training periodization. <i>Sports Med</i>, 2010.</li>
+      <li>Rønnestad BR, Hansen J, Ellefsen S. Block periodization of high-intensity aerobic intervals provides superior training effects in trained cyclists. <i>Scand J Med Sci Sports</i>, 2014.</li>
+      <li>Bosquet L et al. Effects of tapering on performance: a meta-analysis. <i>Med Sci Sports Exerc</i>, 2007.</li>
+      <li>Mujika I, Padilla S. Scientific bases for precompetition tapering strategies. <i>Med Sci Sports Exerc</i>, 2003.</li>
+      <li>Rønnestad BR, Mujika I. Optimizing strength training for running and cycling endurance performance: a review. <i>Scand J Med Sci Sports</i>, 2014.</li>
+      <li>Beattie K et al. The effect of strength training on performance in endurance athletes. <i>Sports Med</i>, 2014.</li>
+      <li>Wilson JM et al. Concurrent training: a meta-analysis examining interference of aerobic and resistance exercises. <i>J Strength Cond Res</i>, 2012.</li>
+      <li>Millet GP, Vleck VE, Bentley DJ. Physiological differences between cycling and running: lessons from triathletes. <i>Sports Med</i>, 2009.</li>
+      <li>Etxebarria N, Mujika I, Pyne DB. Training and competition readiness in triathlon. <i>Sports</i>, 2019.</li>
+      <li>Nielsen RO et al. Excessive progression in weekly running distance and risk of running-related injuries. <i>J Orthop Sports Phys Ther</i>, 2014.</li>
+      <li>Foster C et al. A new approach to monitoring exercise training. <i>J Strength Cond Res</i>, 2001.</li>
+      <li>Banister EW et al. A systems model of training for athletic performance. <i>Aust J Sports Med</i>, 1975.</li>
+      <li>Impellizzeri FM et al. Acute:chronic workload ratio: conceptual issues and fundamental pitfalls. <i>Int J Sports Physiol Perform</i>, 2020.</li>
+      <li>Wakayoshi K et al. Determination and validity of critical velocity as an index of swimming performance in the competitive swimmer. <i>Eur J Appl Physiol</i>, 1992.</li>
+      <li>Daniels J. <i>Daniels' Running Formula</i>. Human Kinetics. · Allen H, Coggan A. <i>Training and Racing with a Power Meter</i>. VeloPress.</li>
+    </ol>
+  </section>
+
+  <footer>Os números deste guia são pontos de partida para um atleta amador saudável. Ajuste pelo histórico, pela resposta do atleta e com acompanhamento profissional. Este material não substitui avaliação médica.</footer>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var NS = "http://www.w3.org/2000/svg";
+  var DAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+  var SPORT = {
+    run: { name: "Corrida", c: "var(--run)", ink: "var(--run-ink)" }, bike: { name: "Ciclismo", c: "var(--bike)", ink: "var(--bike-ink)" },
+    swim: { name: "Natação", c: "var(--swim)", ink: "var(--swim-ink)" }, gym: { name: "Força", c: "var(--gym)", ink: "var(--gym-ink)" },
+    end: { name: "Endurance", c: "var(--end)", ink: "var(--end-ink)" }
+  };
+  var PH = ["var(--ph1)", "var(--ph2)", "var(--ph3)", "var(--ph4)"];
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function num(x, d) { return (d ? x.toFixed(d) : String(Math.round(x))).replace(".", ","); }
+  function hm(min) { var h = Math.floor(min / 60), m = min % 60; return h ? h + "h" + (m ? String(m).padStart(2, "0") : "") : m + "′"; }
+  function svgEl(tag, attrs, parent) {
+    var e = document.createElementNS(NS, tag);
+    Object.keys(attrs).forEach(function (k) { e.setAttribute(k, attrs[k]); });
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function text(parent, x, y, str, attrs) {
+    var t = svgEl("text", Object.assign({ x: x, y: y, "font-size": 12 }, attrs || {}), parent);
+    t.textContent = str;
+    return t;
+  }
+
+  // ---------- Dica flutuante (mouse e foco) ----------
+  var tip = $("tip");
+  function showTip(e, el) {
+    tip.textContent = el.getAttribute("data-tip");
+    tip.hidden = false;
+    var r = el.getBoundingClientRect();
+    var x = e && e.clientX != null ? e.clientX : r.left + r.width / 2;
+    var y = e && e.clientY != null ? e.clientY : r.top;
+    var w = tip.offsetWidth, h = tip.offsetHeight;
+    tip.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, x - w / 2)) + "px";
+    tip.style.top = Math.max(8, y - h - 12) + "px";
+  }
+  document.addEventListener("mousemove", function (e) {
+    var el = e.target.closest && e.target.closest("[data-tip]");
+    if (el) showTip(e, el); else tip.hidden = true;
+  });
+  document.addEventListener("focusin", function (e) { if (e.target.getAttribute && e.target.getAttribute("data-tip")) showTip(null, e.target); });
+  document.addEventListener("focusout", function () { tip.hidden = true; });
+  window.addEventListener("scroll", function () { tip.hidden = true; }, { passive: true });
+
+  // ---------- Lente de zoom ----------
+  (function zoom() {
+    var phases = [["Base", 6], ["Construção", 6], ["Específico", 4], ["Polimento", 2]];
+    var cells = [], k = 0;
+    phases.forEach(function (p, i) { for (var j = 0; j < p[1]; j++) { k++; cells.push('<span style="background:' + PH[i] + '"' + (k >= 9 && k <= 12 ? ' class="sel"' : "") + ' data-tip="Semana ' + k + " · " + p[0] + '"></span>'); } });
+    $("z-weeks").innerHTML = cells.join("");
+    $("z-key").innerHTML = phases.map(function (p, i) { return '<span><i style="background:' + PH[i] + '"></i>' + p[0] + " · " + p[1] + " sem.</span>"; }).join("") + "<span>contorno: o mesociclo abaixo</span>";
+    var meso = [["Sem 9", 82], ["Sem 10", 91], ["Sem 11", 100], ["Sem 12", 66]];
+    $("z-meso").innerHTML = meso.map(function (m, i) {
+      return '<div class="' + (i === 2 ? "sel" : "") + '" data-tip="' + m[0] + ": " + m[1] + '% do volume do pico do mesociclo"><span style="height:' + (m[1] * 0.5) + 'px;' + (i === 3 ? "background:var(--z1)" : "") + '"></span><small>' + m[0] + "</small></div>";
+    }).join("");
+    var micro = [[], [["run", "Z2"], ["gym", "F"]], [["run", "Z1"]], [["run", "Z3"], ["gym", "F"]], [], [["run", "Z1"]], [["run", "Z1"]]];
+    $("z-micro").innerHTML = micro.map(function (d, i) {
+      return '<div class="' + (i === 1 ? "sel" : "") + '"><b>' + DAYS[i] + "</b>" + d.map(function (s) {
+        return '<i style="background:' + (s[1] === "F" ? "var(--gym)" : "var(--" + s[1].toLowerCase() + ")") + '" data-tip="' + SPORT[s[0]].name + " · " + (s[1] === "F" ? "força" : s[1]) + '"></i>';
+      }).join("") + "</div>";
+    }).join("");
+    var sess = [["Aquecimento", 15, "Z1"], ["10′ T", 10, "Z2"], ["2′", 2, "Z1"], ["10′ T", 10, "Z2"], ["2′", 2, "Z1"], ["10′ T", 10, "Z2"], ["Volta à calma", 11, "Z1"]];
+    $("z-sess").innerHTML = sess.map(function (s) {
+      return '<span style="flex:' + s[1] + ";background:var(--" + s[2].toLowerCase() + ");color:var(--" + s[2].toLowerCase() + '-ink)" data-tip="' + s[0] + " · " + s[1] + " min · " + s[2] + '">' + (s[1] >= 10 ? s[0] : "") + "</span>";
+    }).join("");
+  })();
+
+  // ---------- Demanda das provas (dispersão, x em log) ----------
+  // [modalidade, prova, duração (min), % do limiar, deslocamento do rótulo x, y, âncora]
+  var DEMAND = [
+    ["run", "5 km", 20, 104, 0, -10, "middle"], ["run", "10 km", 42, 100, 0, 18, "middle"], ["run", "Meia maratona", 100, 95, 0, -10, "middle"],
+    ["run", "Maratona", 225, 88, 9, 4, "start"], ["run", "Maratona do Ironman", 290, 79, 0, 18, "middle"], ["run", "Ultra 50 km", 360, 81, 9, -4, "start"],
+    ["bike", "Contrarrelógio 40 km", 65, 100, 0, -10, "middle"], ["bike", "Bike do olímpico", 72, 91, -9, 18, "end"], ["bike", "Bike do 70.3", 165, 78, -9, 4, "end"],
+    ["bike", "Bike do Ironman", 340, 70, 0, -10, "middle"], ["bike", "Gran fondo", 300, 66, 0, 18, "middle"],
+    ["swim", "400 m", 7, 106, 0, -10, "middle"], ["swim", "1.500 m", 26, 99, 0, 18, "middle"], ["swim", "Natação do Ironman", 80, 92, -9, -4, "end"],
+    ["swim", "10 km águas abertas", 160, 90, 9, -6, "start"]
+  ];
+  (function demand() {
+    var box = $("demand");
+    var W = 820, H = 330, m = { l: 48, r: 24, t: 16, b: 40 };
+    var x0 = Math.log10(5), x1 = Math.log10(600), y0 = 60, y1 = 110;
+    var X = function (min) { return m.l + (Math.log10(min) - x0) / (x1 - x0) * (W - m.l - m.r); };
+    var Y = function (v) { return m.t + (y1 - v) / (y1 - y0) * (H - m.t - m.b); };
+    var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, "aria-hidden": "true" });
+    svg.style.minWidth = "620px";
+    // faixas de zona
+    svgEl("rect", { x: m.l, y: Y(110), width: W - m.l - m.r, height: Y(100) - Y(110), fill: "var(--z3)", "fill-opacity": 0.12 }, svg);
+    svgEl("rect", { x: m.l, y: Y(100), width: W - m.l - m.r, height: Y(84) - Y(100), fill: "var(--z2)", "fill-opacity": 0.12 }, svg);
+    svgEl("rect", { x: m.l, y: Y(84), width: W - m.l - m.r, height: Y(60) - Y(84), fill: "var(--z1)", "fill-opacity": 0.14 }, svg);
+    [60, 70, 80, 90, 100, 110].forEach(function (v) {
+      svgEl("line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: "var(--line)", "stroke-width": 1 }, svg);
+      text(svg, m.l - 8, Y(v) + 4, v + "%", { "text-anchor": "end", "font-size": 11 });
+    });
+    [[5, "5 min"], [10, "10 min"], [30, "30 min"], [60, "1 h"], [120, "2 h"], [240, "4 h"], [480, "8 h"]].forEach(function (t) {
+      svgEl("line", { x1: X(t[0]), x2: X(t[0]), y1: H - m.b, y2: H - m.b + 5, stroke: "var(--faint)" }, svg);
+      text(svg, X(t[0]), H - m.b + 18, t[1], { "text-anchor": "middle", "font-size": 11 });
+    });
+    text(svg, m.l, H - 4, "duração da prova (escala logarítmica)", { "font-size": 11 });
+    DEMAND.forEach(function (d) {
+      var cx = X(d[2]), cy = Y(d[3]);
+      var g = svgEl("g", { "data-tip": d[1] + " · ~" + hm(d[2]) + " · " + d[3] + "% do limiar", tabindex: 0 }, svg);
+      svgEl("circle", { cx: cx, cy: cy, r: 12, fill: "transparent" }, g);
+      svgEl("circle", { cx: cx, cy: cy, r: 5.5, fill: SPORT[d[0]].c, stroke: "var(--surface)", "stroke-width": 2 }, g);
+      text(g, cx + d[4], cy + d[5], d[1], { "text-anchor": d[6], "font-size": 11.5, style: "fill:var(--ink)" });
+    });
+    box.appendChild(svg);
+    $("demand-table").innerHTML = "<thead><tr><th>Prova</th><th>Modalidade</th><th>Duração típica</th><th>% do limiar</th></tr></thead><tbody>" +
+      DEMAND.map(function (d) { return "<tr><td>" + esc(d[1]) + "</td><td>" + SPORT[d[0]].name + "</td><td>" + hm(d[2]) + "</td><td>" + d[3] + "%</td></tr>"; }).join("") + "</tbody>";
+  })();
+
+  // ---------- Distribuição por fase ----------
+  var MODELS = {
+    polarizado: { rows: [[85, 5, 10], [80, 5, 15], [78, 7, 15], [82, 5, 13]],
+      note: "<b>Meu padrão para quem treina 6 h ou mais por semana.</b> Z1 de verdade e Z3 de verdade, com pouco tempo no meio. Tem a melhor evidência para atletas treinados (Seiler, 2010; Stöggl e Sperlich, 2014)." },
+    piramidal: { rows: [[80, 15, 5], [76, 17, 7], [72, 20, 8], [78, 14, 8]],
+      note: "<b>Uso no específico de provas longas</b> (maratona, 70.3, Ironman), em que o ritmo de prova cai na Z2. Muitos atletas de elite treinam assim fora dos blocos de VO2máx." },
+    limiar: { rows: [[60, 35, 5], [55, 37, 8], [50, 40, 10], [60, 30, 10]],
+      note: "<b>Só para quem tem pouco tempo</b> (3 a 4 sessões, menos de 5 h): rende mais estímulo por minuto. Com volume maior, acumula fadiga sem o retorno correspondente e é o primeiro modelo que eu troco." }
+  };
+  var PHASE_NAMES = ["Base", "Construção", "Específico", "Polimento"];
+  function drawStack(box, rows, series, opts) {
+    box.innerHTML = "";
+    var W = 760, rowH = 34, gap = 14, m = { l: opts.labelW || 104, r: 8, t: 6, b: 24 };
+    var H = m.t + rows.length * rowH + (rows.length - 1) * gap + m.b;
+    var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, "aria-hidden": "true" }, box);
+    var plotW = W - m.l - m.r;
+    [0, 25, 50, 75, 100].forEach(function (v) {
+      var x = m.l + v / 100 * plotW;
+      svgEl("line", { x1: x, x2: x, y1: m.t, y2: H - m.b + 4, stroke: "var(--line)", "stroke-width": 1 }, svg);
+      text(svg, x, H - 6, v + "%", { "text-anchor": v === 0 ? "start" : v === 100 ? "end" : "middle", "font-size": 11 });
+    });
+    rows.forEach(function (r, i) {
+      var y = m.t + i * (rowH + gap), acc = 0;
+      text(svg, m.l - 10, y + rowH / 2 + 5, r.label, { "text-anchor": "end", "font-size": 14, "font-weight": 600, style: "fill:var(--ink)" });
+      var total = r.values.reduce(function (a, b) { return a + b; }, 0);
+      r.values.forEach(function (v, j) {
+        if (!v) return;
+        var w = v / total * plotW, x = m.l + acc / total * plotW;
+        var s = series[j];
+        var g = svgEl("g", { "data-tip": r.label + " · " + s.name + " " + Math.round(v / total * 100) + "%", tabindex: 0 }, svg);
+        var isLast = r.values.slice(j + 1).every(function (n) { return !n; }), rad = 4;
+        var x2 = x + w - (isLast ? 0 : 2);
+        var d = "M" + (x + (acc === 0 ? rad : 0)) + "," + y + " H" + (x2 - (isLast ? rad : 0)) +
+          (isLast ? " Q" + x2 + "," + y + " " + x2 + "," + (y + rad) + " V" + (y + rowH - rad) + " Q" + x2 + "," + (y + rowH) + " " + (x2 - rad) + "," + (y + rowH) : " V" + (y + rowH)) +
+          " H" + (x + (acc === 0 ? rad : 0)) +
+          (acc === 0 ? " Q" + x + "," + (y + rowH) + " " + x + "," + (y + rowH - rad) + " V" + (y + rad) + " Q" + x + "," + y + " " + (x + rad) + "," + y : " V" + y) + " Z";
+        svgEl("path", { d: d, fill: s.c }, g);
+        var pct = Math.round(v / total * 100);
+        if (w > 44) text(g, x + (x2 - x) / 2, y + rowH / 2 + 5, (opts.short ? s.short + " " : "") + pct + "%", { "text-anchor": "middle", "font-size": 12.5, "font-weight": 600, style: "fill:" + s.ink });
+        acc += v;
+      });
+    });
+  }
+  var ZSERIES = [
+    { name: "Z1", short: "Z1", c: "var(--z1)", ink: "var(--z1-ink)" },
+    { name: "Z2", short: "Z2", c: "var(--z2)", ink: "var(--z2-ink)" },
+    { name: "Z3", short: "Z3", c: "var(--z3)", ink: "var(--z3-ink)" }
+  ];
+  function drawDist(model) {
+    var md = MODELS[model];
+    drawStack($("dist"), md.rows.map(function (r, i) { return { label: PHASE_NAMES[i], values: r }; }), ZSERIES, { short: true });
+    $("dist-note").innerHTML = md.note;
+    document.querySelectorAll("#dist-seg button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-model") === model)); });
+  }
+  $("dist-seg").addEventListener("click", function (e) { var b = e.target.closest("button"); if (b) drawDist(b.getAttribute("data-model")); });
+  drawDist("polarizado");
+
+  // ---------- Semana-tipo ----------
+  function weekHtml(days) {
+    return '<div class="week">' + days.map(function (d, i) {
+      var inner = d.length ? d.map(function (s) {
+        var sp = SPORT[s[0]];
+        return '<div class="sess' + (s[4] ? " brick" : "") + '" style="--c:' + sp.c + '"><span class="sp">' + sp.name + (s[4] ? "<span>brick</span>" : "") +
+          '</span><span class="t">' + esc(s[1]) + '</span><span class="m"><span>' + hm(s[2]) + '</span><span class="zchip ' + s[3] + '">' + s[3] + "</span></span></div>";
+      }).join("") : '<div class="rest">Descanso ou mobilidade</div>';
+      return '<div class="day"><b>' + DAYS[i] + '</b><div class="stack" style="display:grid;gap:6px">' + inner + "</div></div>";
+    }).join("") + "</div>";
+  }
+  function weekMeta(days) {
+    var tot = {}, mins = 0, z = { Z1: 0, Z2: 0, Z3: 0 }, aero = 0, n = 0;
+    days.forEach(function (d) { d.forEach(function (s) {
+      n++; mins += s[2]; tot[s[0]] = (tot[s[0]] || 0) + s[2];
+      if (z[s[3]] != null) { z[s[3]] += s[2]; aero += s[2]; }
+    }); });
+    var parts = Object.keys(tot).map(function (k) { return SPORT[k].name.toLowerCase() + " " + hm(tot[k]); });
+    return '<div class="week-meta"><span><b>' + n + " sessões · " + hm(mins) + "</b></span><span>" + parts.join(" · ") + "</span>" +
+      (aero ? "<span>tempo de sessão: Z1 " + Math.round(z.Z1 / aero * 100) + "% · Z2 " + Math.round(z.Z2 / aero * 100) + "% · Z3 " + Math.round(z.Z3 / aero * 100) + "%</span>" : "") + "</div>";
+  }
+
+  // ---------- Macrociclo (barras por semana) ----------
+  function drawMacro(box, mc, color) {
+    box.innerHTML = "";
+    var weeks = [];
+    mc.phases.forEach(function (p, pi) { p.vols.forEach(function (v) { weeks.push({ v: Math.abs(v), deload: v < 0, ph: pi }); }); });
+    var W = 760, H = 210, m = { l: 40, r: 8, t: 14, b: 50 };
+    var max = Math.max.apply(null, weeks.map(function (w) { return w.v; }));
+    var step = mc.step, top = Math.ceil(max / step) * step;
+    var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, "aria-hidden": "true" }, box);
+    var plotH = H - m.t - m.b, band = (W - m.l - m.r) / weeks.length, bw = Math.min(26, band * 0.66);
+    var Y = function (v) { return m.t + plotH - v / top * plotH; };
+    for (var t = 0; t <= top + 1e-9; t += step) {
+      svgEl("line", { x1: m.l, x2: W - m.r, y1: Y(t), y2: Y(t), stroke: "var(--line)" }, svg);
+      text(svg, m.l - 6, Y(t) + 4, num(t, step < 1 ? 1 : 0), { "text-anchor": "end", "font-size": 11 });
+    }
+    text(svg, m.l + 4, m.t - 4, mc.unit, { "text-anchor": "start", "font-size": 11 });
+    weeks.forEach(function (w, i) {
+      var x = m.l + i * band + (band - bw) / 2, y = Y(w.v), h = m.t + plotH - y, r = Math.min(4, bw / 2, h);
+      var g = svgEl("g", { "data-tip": "Semana " + (i + 1) + " · " + mc.phases[w.ph].name + (w.deload ? " · alívio" : "") + " · " + num(w.v, w.v % 1 ? 1 : 0) + " " + mc.unit, tabindex: 0 }, svg);
+      svgEl("rect", { x: m.l + i * band, y: m.t, width: band, height: plotH, fill: "transparent" }, g);
+      svgEl("path", { d: "M" + x + "," + (m.t + plotH) + " V" + (y + r) + " Q" + x + "," + y + " " + (x + r) + "," + y + " H" + (x + bw - r) + " Q" + (x + bw) + "," + y + " " + (x + bw) + "," + (y + r) + " V" + (m.t + plotH) + " Z",
+        fill: color, "fill-opacity": w.deload ? 0.4 : 1 }, g);
+      if (weeks.length <= 20 || i % 2 === 0) text(svg, x + bw / 2, m.t + plotH + 14, String(i + 1), { "text-anchor": "middle", "font-size": 10.5 });
+    });
+    var i0 = 0;
+    mc.phases.forEach(function (p, pi) {
+      var x0 = m.l + i0 * band + 1, x1 = m.l + (i0 + p.vols.length) * band - 1, y = H - 26;
+      svgEl("rect", { x: x0, y: y, width: x1 - x0, height: 20, rx: 3, fill: PH[pi] }, svg);
+      var label = p.name.length * 6.6 + 10 < x1 - x0 ? p.name : p.name.slice(0, 4) + ".";
+      text(svg, (x0 + x1) / 2, y + 14, label, { "text-anchor": "middle", "font-size": 11.5, "font-weight": 600, style: "fill:var(--ink)" });
+      i0 += p.vols.length;
+    });
+  }
+
+  // ---------- Modalidades ----------
+  var SPORTS = {
+    run: {
+      tab: "Corrida", color: "var(--run)", title: "Corrida",
+      why: "O que limita é a tolerância mecânica. Osso e tendão se adaptam mais devagar que o sistema cardiovascular, então o volume de corrida tem teto próprio mesmo quando o atleta parece aguentar mais. O resto vem do limiar, da economia e da durabilidade no fim da prova.",
+      facts: [["Medida", "km e minutos por zona; rTSS ou sRPE"], ["Progressão", "+5% a 10% nas semanas de carga; nenhum salto acima de ~30% em duas semanas"], ["Longão", "até 30%–35% da semana e no máximo 2h45–3h"], ["Frequência", "4 a 6 corridas; 2 sessões-chave + longão"]],
+      macro: { label: "Maratona em 18 semanas · volume semanal", unit: "km", step: 20, phases: [
+        { name: "Base", vols: [44, 47, 50, -34, 50, 53], focus: "Z1 dominante, strides e subidas curtas. Força máxima 2×." },
+        { name: "Construção", vols: [56, -38, 56, 59, 62, -42], focus: "Limiar e VO2máx alternados. Força vira potência e pliometria." },
+        { name: "Específico", vols: [62, 65, 65, -48], focus: "Ritmo de prova dentro do longão. Força 1× para manter." },
+        { name: "Polimento", vols: [39, 28], focus: "−40% a −60% de volume, intensidade e frequência mantidas." }] },
+      week: [[], [["run", "Limiar · 3 × 10′ em T, 2′ de trote", 60, "Z2"], ["gym", "Força máxima de pernas, ≥ 6 h depois", 45, "F"]], [["run", "Rodagem + 6 strides de 20″", 45, "Z1"]],
+        [["run", "VO2máx · 5 × 3′ em I, trote igual", 55, "Z3"], ["gym", "Core e pliometria leve", 25, "F"]], [], [["run", "Rodagem leve", 40, "Z1"]], [["run", "Longão (último terço em ritmo de prova no específico)", 105, "Z1"]]],
+      weekLabel: "Intermediário · meia ou maratona · fase de construção",
+      keys: [["Longão", "1h30 a 2h45 em Z1. No específico, os últimos 30% a 40% em ritmo de maratona, com a nutrição da prova."],
+        ["Limiar", "3 × 10′ ou 2 × 20′ no ritmo de ~60 minutos de prova, com 1′ a 2′ de trote."],
+        ["VO2máx", "5 a 6 × 3′ (ou 1.000 m) no ritmo de 3 a 5 km, recuperação igual ao estímulo."],
+        ["Strides e subidas", "6 a 10 × 15″ a 20″ com recuperação completa: economia sem custo metabólico."],
+        ["Ritmo de prova", "8 a 16 km em ritmo de meia ou maratona, sozinho ou dentro do longão."]],
+      taper: "2 semanas (maratona: 2 a 3). Volume cai 40% a 60% em degraus; mantenho uma sessão curta de qualidade por semana e o número de corridas.",
+      errors: ["Rodagens no meio-termo (Z2 crônico) que roubam qualidade das sessões-chave.", "Subir volume e intensidade na mesma semana.", "Parar a força no específico.", "Longão sem a nutrição testada."]
+    },
+    bike: {
+      tab: "Ciclismo", color: "var(--bike)", title: "Ciclismo",
+      why: "O impacto é baixo, então o volume pode ser bem maior que na corrida. Quem decide são a potência no limiar (FTP ou potência crítica), o VO2máx e a durabilidade: manter potência depois de horas pedalando.",
+      facts: [["Medida", "TSS por potência (IF² × horas × 100) e kJ"], ["Progressão", "CTL +3 a +5 por semana; até +7 em blocos curtos"], ["Longo", "3 a 5 h em Z1, com comida e bebida da prova"], ["Teste", "FTP a cada 6 a 8 semanas para manter as zonas certas"]],
+      macro: { label: "Gran fondo em 16 semanas · horas por semana", unit: "h", step: 2, phases: [
+        { name: "Base", vols: [6.5, 7, 7.5, -5, 7.5, 8], focus: "Z1 longo, cadência variada, torque a 50–60 rpm." },
+        { name: "Construção", vols: [8.5, 9, -6, 9, 9.5], focus: "Sweet spot e limiar; um bloco de VO2máx." },
+        { name: "Específico", vols: [10, 10.5, 9], focus: "Simulação do percurso e da nutrição." },
+        { name: "Polimento", vols: [6, 4.5], focus: "−40% a −50% de volume; aberturas curtas em Z3." }] },
+      week: [[], [["bike", "VO2máx · 5 × 4′ a 110–120% do FTP", 75, "Z3"], ["gym", "Força máxima, ≥ 6 h depois", 45, "F"]], [["bike", "Endurance a 60–70% do FTP, cadência 90+", 75, "Z1"]],
+        [["bike", "Sweet spot · 3 × 15′ a 88–94% do FTP", 90, "Z2"], ["gym", "Core", 20, "F"]], [["bike", "Giro regenerativo", 45, "Z1"]],
+        [["bike", "Longo · 3h30, fecha com 2 × 15′ em sweet spot", 210, "Z1"]], [["bike", "Endurance + 6 sprints de 10″", 120, "Z1"]]],
+      weekLabel: "Intermediário · gran fondo · fase de construção",
+      keys: [["Longo", "3 a 5 h a 60–70% do FTP, testando a nutrição de prova (60 a 90 g de carboidrato por hora)."],
+        ["Sweet spot", "3 × 15′ a 20′ a 88–94% do FTP, 5′ de recuperação. Muito estímulo por pouca fadiga."],
+        ["VO2máx em bloco", "5 × 4′ a 5′ a 110–120% do FTP. Em bloco: várias sessões em 7 a 10 dias, depois alívio (Rønnestad, 2014)."],
+        ["Torque", "4 a 6 × 5′ a 50–60 rpm em Z2. Complementa a academia, não substitui."],
+        ["Durabilidade", "Limiar ou sweet spot no fim de um longo, por exemplo 2 × 15′ depois de 3 h."]],
+      taper: "7 a 14 dias, volume −40% a −50%. Mantenho 2 sessões curtas com 3 a 5 × 1′ em Z3 para não perder a sensação de ritmo.",
+      errors: ["Horas e horas em Z3 de Coggan (tempo) sem propósito.", "FTP desatualizado, que desloca todas as zonas.", "Nutrição só no dia da prova."]
+    },
+    swim: {
+      tab: "Natação", color: "var(--swim)", title: "Natação",
+      why: "Técnica antes de capacidade: a eficiência da braçada explica mais o desempenho que o VO2máx. Por isso a frequência pesa mais que a duração. Quatro sessões de 45 minutos rendem mais que duas de 90.",
+      facts: [["Medida", "metros por zona e ritmo por 100 m relativo à CSS"], ["Progressão", "metros +10% a 15% por mesociclo"], ["Frequência", "mínimo de 3 sessões para manter a técnica"], ["Técnica", "20% a 30% de cada sessão em educativos"]],
+      macro: { label: "Águas abertas 3 km em 12 semanas · km por semana", unit: "km", step: 5, phases: [
+        { name: "Base", vols: [9, 10, 11, -7.5], focus: "Técnica, educativos, aeróbio com pull e palmar." },
+        { name: "Construção", vols: [11.5, 12.5, 13.5, -9], focus: "Séries na CSS com pausas curtas." },
+        { name: "Específico", vols: [13.5, 14, 12], focus: "Ritmo de prova, largada, navegação e vácuo." },
+        { name: "Polimento", vols: [8], focus: "−30% a −50% de metros, velocidade mantida." }] },
+      week: [[["swim", "Técnica + aeróbio · educativos e 4 × 400", 60, "Z1"]], [["gym", "Força e core fora da água", 40, "F"]], [["swim", "CSS · 10 × 200, 15–20″ de pausa", 60, "Z2"]], [],
+        [["swim", "Velocidade · 16 × 50 forte + 800 pull", 55, "Z3"], ["gym", "Ombro e core", 25, "F"]], [["swim", "Contínuo 3.000 m, em águas abertas se der", 65, "Z1"]], []],
+      weekLabel: "Intermediário · águas abertas ou natação de triathlon · construção",
+      keys: [["CSS", "10 × 200 m na CSS, 15″ a 20″ de pausa. A sessão que mais transfere para triathlon e águas abertas."],
+        ["Técnica", "Educativos de pegada, rotação e respiração bilateral, no início da sessão, ainda descansado."],
+        ["Velocidade", "12 a 16 × 50 m forte com 30″ a 40″ de pausa."],
+        ["Contínuo", "1.500 a 3.000 m em Z1/Z2, olhando à frente a cada 6 a 8 braçadas nas águas abertas."]],
+      taper: "Águas abertas e triathlon: 5 a 10 dias. Provas curtas de piscina pedem mais, até 2 a 3 semanas.",
+      errors: ["Nadar tudo no mesmo ritmo.", "Volume sem técnica, que só reforça o vício.", "Poucas sessões longas no lugar de várias curtas."]
+    },
+    gym: {
+      tab: "Força", color: "var(--gym)", title: "Força para o atleta de endurance",
+      why: "A força pesada melhora a economia de corrida e de pedal e protege tendões (Rønnestad e Mujika, 2014; Beattie, 2014). O risco é a interferência com o aeróbio e as pernas cansadas na sessão-chave. Por isso periodizo o conteúdo, não só o número de sessões.",
+      facts: [["Medida", "séries pesadas por semana, %1RM e sRPE"], ["Intensidade", "força máxima a 80%–90% de 1RM, 2 a 3 repetições em reserva"], ["Frequência", "2 a 3× na base, 1 a 2× na construção, 1× no específico"], ["Corte", "última sessão pesada 7 a 10 dias antes da prova"]],
+      macro: { label: "Força em 16 semanas · séries pesadas por semana", unit: "séries", step: 5, phases: [
+        { name: "Adaptação", vols: [12, 14, 16], focus: "2–3 × 12–15 a 60–70%, técnica e unilaterais." },
+        { name: "Força máxima", vols: [16, 18, 18, -10, 18, 20], focus: "3–5 × 3–6 a 80–90%, pausas de 2′ a 3′." },
+        { name: "Potência", vols: [14, 14, -8, 14], focus: "3 × 3–5 rápidos a 70–80% + pliometria." },
+        { name: "Manutenção", vols: [6, 6, 6], focus: "1× por semana, 2–3 × 3–5 a 85%." }] },
+      week: [[["gym", "A · Pernas pesado · agachamento 5 × 5 a 80–85%, terra romeno 4 × 6", 60, "F"]], [["end", "Aeróbio leve opcional", 40, "Z1"]],
+        [["gym", "B · Superiores e core · supino e remada 4 × 6, anti-rotação", 55, "F"]], [], [["gym", "C · Potência · saltos 4 × 5, levantamentos rápidos 4 × 3 a 70%", 50, "F"]], [["end", "Aeróbio leve opcional", 40, "Z1"]], []],
+      weekLabel: "Bloco de força máxima · 3 sessões",
+      keys: [["Força máxima de pernas", "Agachamento ou leg press 4 × 4–5 a 85%, terra romeno 3 × 5, panturrilha pesada 3 × 6–8."],
+        ["Potência e pliometria", "Saltos na caixa 4 × 5, saltos unipodais 3 × 8, agachamento com salto leve 3 × 5. De 60 a 100 contatos por sessão."],
+        ["Core e estabilidade", "Anti-rotação, ponte, Copenhagen: 15′ a 20′, 2× por semana, depois de sessões leves."]],
+      taper: "Última sessão pesada 7 a 10 dias antes. Nada de pliometria nos 5 dias finais. Core leve pode continuar.",
+      errors: ["Séries de 15 a 20 repetições de resistência: o endurance já faz esse papel.", "Força pesada na véspera da sessão-chave.", "Abandonar a força no período competitivo."]
+    }
+  };
+
+  // ---------- Combinações ----------
+  var COMBOS = {
+    tri: {
+      tab: "Triathlon curto", sports: ["swim", "bike", "run"], title: "Triathlon sprint e olímpico",
+      why: "Velocidade no limiar nas três modalidades e transições rápidas. Prova de 1 a 2,5 h: a intensidade alta pesa mais que no longo.",
+      shares: [[25, 40, 25, 10], [25, 40, 28, 7], [25, 38, 32, 5], [30, 35, 30, 5]], series: ["swim", "bike", "run", "gym"],
+      rules: ["Natação 3× por semana, sempre: é a primeira a perder técnica.", "Dia duro de verdade: bike intensa e corrida de transição no mesmo treino; os outros dias realmente leves.",
+        "Brick curto (bike → 10′ a 20′ de corrida) 1× por semana na construção, 2× no específico.", "Corrida em até 30% a 35% do tempo: o impacto não sobe junto com o volume de bike."],
+      keys: [["Brick de limiar", "4 × (8′ de bike a 95–100% do FTP + 2 km de corrida no ritmo de 10 km)."], ["Largada", "4 × (100 m forte + 300 m na CSS): treina sair rápido sem quebrar."]],
+      week: [[["swim", "CSS · 8 × 200", 55, "Z2"], ["gym", "Força", 40, "F"]], [["bike", "VO2máx · 5 × 4′", 75, "Z3"], ["run", "Transição · 15′ no ritmo de 10 km", 15, "Z2", 1]],
+        [["swim", "Técnica + aeróbio", 50, "Z1"], ["run", "Rodagem leve", 40, "Z1"]], [["run", "Limiar · 4 × 8′ em T", 55, "Z2"], ["gym", "Core, ≥ 6 h depois", 25, "F"]],
+        [["swim", "Velocidade · 12 × 100 forte", 50, "Z3"]], [["bike", "Longo · 2h30 com 3 × 10′ no limiar", 150, "Z1"], ["run", "Transição · 20′", 20, "Z1", 1]], [["run", "Longão", 75, "Z1"]]],
+      weekLabel: "Intermediário · olímpico · construção"
+    },
+    ironman: {
+      tab: "Triathlon longo", sports: ["swim", "bike", "run"], title: "Triathlon 70.3 e Ironman",
+      why: "Durabilidade e economia em Z1 e Z2 por muitas horas. A intensidade alta é tempero; o prato principal é volume aeróbio com pouco impacto, e isso quer dizer bike.",
+      shares: [[20, 50, 22, 8], [18, 55, 22, 5], [15, 58, 24, 3], [20, 50, 27, 3]], series: ["swim", "bike", "run", "gym"],
+      rules: ["Bike em 50% a 55% do tempo: constrói o motor com baixo impacto.", "Longão de corrida até 2h15 a 2h30. Acima disso, o custo de recuperação passa do ganho.",
+        "Simulação de prova a cada 2 a 3 semanas no específico: 4 a 5 h de bike + 45′ a 60′ de corrida, com a nutrição da prova.", "Natação 3×: uma técnica, uma na CSS, uma longa contínua."],
+      keys: [["Bike longa com ritmo de prova", "3 × 30′ a 75–80% do FTP (70.3) ou 68–75% (Ironman) dentro de 4 a 5 h."], ["Corrida após bike longa", "30′ a 60′ no ritmo de prova, logo depois da bike: ensina a correr cansado."]],
+      week: [[["swim", "Técnica · 3.000 m", 60, "Z1"], ["gym", "Força de manutenção", 35, "F"]], [["bike", "Sweet spot · 3 × 20′", 90, "Z2"], ["run", "Rodagem leve", 40, "Z1"]],
+        [["swim", "CSS · 5 × 400", 65, "Z2"], ["run", "Limiar · 3 × 10′ em T", 60, "Z2"]], [["bike", "Endurance, cadência alta", 90, "Z1"], ["gym", "Core", 20, "F"]],
+        [["swim", "Contínuo · 3.500 m", 70, "Z1"]], [["bike", "Longo · 4h30 com 3 × 30′ em ritmo de prova", 270, "Z1"], ["run", "Transição · 30′ em ritmo de prova", 30, "Z2", 1]], [["run", "Longão", 105, "Z1"]]],
+      weekLabel: "Intermediário · Ironman · específico"
+    },
+    du: {
+      tab: "Duathlon", sports: ["run", "bike"], title: "Duathlon",
+      why: "Correr bem com as pernas cansadas: a segunda corrida decide a prova. A corrida é a modalidade mais limitante e a de maior impacto.",
+      shares: [[40, 50, 10], [42, 50, 8], [45, 50, 5], [45, 50, 5]], series: ["run", "bike", "gym"],
+      rules: ["Corrida em 40% a 45% do tempo, sempre dentro do teto de progressão da corrida.", "Brick corrida–bike–corrida a cada 2 semanas no específico.",
+        "Cadência alta (90+ rpm) no fim dos treinos de bike, para poupar as pernas para a corrida.", "A bike leva o volume aeróbio extra que a corrida não comporta."],
+      keys: [["C–B–C", "15′ corrida + 60′ bike + 15′ corrida, tudo em ritmo de prova."], ["Intervalado de corrida", "6 × 1.000 m no ritmo de 5 a 10 km: a primeira corrida da prova é rápida."]],
+      week: [[["gym", "Força", 45, "F"]], [["run", "Intervalado · 6 × 1.000 m no ritmo de 5–10 km", 60, "Z3"]], [["bike", "Endurance", 75, "Z1"]],
+        [["bike", "Limiar · 2 × 20′", 75, "Z2"], ["run", "Transição · 15′ com cadência alta", 15, "Z2", 1]], [],
+        [["run", "C–B–C · 15′ de corrida", 15, "Z2", 1], ["bike", "60′ em ritmo de prova", 60, "Z2", 1], ["run", "15′ de corrida", 15, "Z2", 1]], [["run", "Longão", 70, "Z1"], ["bike", "Giro leve à tarde", 45, "Z1"]]],
+      weekLabel: "Intermediário · duathlon padrão · específico"
+    },
+    aqua: {
+      tab: "Aquathlon", sports: ["swim", "run"], title: "Aquathlon",
+      why: "Sair da água com a frequência cardíaca alta e correr no ritmo. Duas modalidades sem interferência mecânica entre si, o que permite frequência alta nas duas.",
+      shares: [[45, 45, 10], [42, 50, 8], [40, 55, 5], [45, 50, 5]], series: ["swim", "run", "gym"],
+      rules: ["Natação 3×, corrida 3 a 4× por semana.", "Brick natação → corrida 1× por semana: 750 a 1.500 m + 3 a 5 km.",
+        "Treinar a transição em pé: a tontura ao sair da água melhora com prática.", "Natação forte e corrida forte podem dividir o dia com 4 a 6 h de intervalo."],
+      keys: [["Brick de prova", "1.500 m em ritmo de prova + 5 km em ritmo de prova, com transição cronometrada."], ["Velocidade na água", "16 × 50 m forte: a largada define o grupo."]],
+      week: [[["swim", "Técnica + CSS · 6 × 200", 60, "Z2"]], [["run", "VO2máx · 5 × 3′", 55, "Z3"], ["gym", "Força, ≥ 6 h depois", 40, "F"]], [["swim", "Aeróbio · 2.500 m", 50, "Z1"], ["run", "Rodagem leve", 40, "Z1"]],
+        [["swim", "Velocidade · 16 × 50", 45, "Z3"]], [], [["swim", "1.500 m em ritmo de prova", 30, "Z2", 1], ["run", "Transição · 5 km em ritmo de prova", 25, "Z2", 1]], [["run", "Longão", 75, "Z1"], ["gym", "Core", 20, "F"]]],
+      weekLabel: "Intermediário · aquathlon · construção"
+    },
+    cross: {
+      tab: "Corrida + ciclismo", sports: ["run", "bike"], title: "Corrida com ciclismo complementar",
+      why: "Mais volume aeróbio com menos impacto. Indico para corredor veterano, com histórico de lesão ou voltando de uma. A prova continua sendo de corrida.",
+      shares: [[50, 40, 10], [55, 37, 8], [65, 30, 5], [70, 25, 5]], series: ["run", "bike", "gym"],
+      rules: ["A bike substitui rodagens leves, nunca as sessões-chave nem o longão.", "Conto por tempo e carga, não por km: 60′ de bike leve valem 40′ a 45′ de corrida leve em carga aeróbia.",
+        "A participação da bike cai perto da prova: a resistência específica do longão não se transfere.", "Na volta de lesão, a bike entra primeiro e a corrida volta por cima dela."],
+      keys: [["Bike no lugar da rodagem", "60′ a 90′ em Z1, cadência 85 a 95 rpm."], ["Sweet spot na bike", "3 × 10′ a 88–94% do FTP: estímulo de limiar sem impacto."]],
+      week: [[["bike", "Giro leve", 45, "Z1"]], [["run", "Limiar · 2 × 15′ em T", 55, "Z2"], ["gym", "Força, ≥ 6 h depois", 40, "F"]], [["bike", "Endurance, no lugar da rodagem", 60, "Z1"]],
+        [["run", "VO2máx · 6 × 800 m", 55, "Z3"]], [], [["bike", "90′ com 3 × 10′ em sweet spot", 90, "Z2"]], [["run", "Longão", 90, "Z1"]]],
+      weekLabel: "Corredor intermediário · meia maratona · construção"
+    },
+    force: {
+      tab: "Endurance + força", sports: ["end", "gym"], title: "Endurance com força concorrente",
+      why: "Ganhar economia e resistência a lesões sem tirar qualidade do aeróbio. A interferência é real e maior com a corrida que com a bike (Wilson, 2012); a ordem e o intervalo resolvem quase tudo.",
+      shares: [[85, 15], [88, 12], [93, 7], [97, 3]], series: ["end", "gym"],
+      rules: ["Força pesada no mesmo dia da sessão intensa, depois dela, com 6 h ou mais. O dia duro fica duro e o dia leve fica leve.",
+        "Nunca força pesada de pernas nas 24 a 48 h antes do longão ou da sessão-chave.", "2× por semana na base, 1 a 2× na construção, 1× no específico; última pesada 7 a 10 dias antes da prova.",
+        "Nadadores e ciclistas toleram mais volume de força que corredores."],
+      keys: [["Depois da sessão intensa", "Agachamento 4 × 4 a 85%, terra romeno 3 × 5, panturrilha 3 × 8. 40′ a 50′."], ["Depois da sessão leve", "Potência e pliometria (saltos 4 × 5, step-up rápido 3 × 5), 30′ a 35′."]],
+      week: [[["end", "Sessão leve", 45, "Z1"]], [["end", "Sessão intensa pela manhã", 60, "Z3"], ["gym", "Força máxima à noite", 50, "F"]], [["end", "Sessão leve", 45, "Z1"], ["gym", "Core e estabilidade", 20, "F"]],
+        [["end", "Sessão intensa pela manhã", 60, "Z2"], ["gym", "Potência à noite", 35, "F"]], [], [["end", "Sessão leve", 45, "Z1"]], [["end", "Sessão longa", 120, "Z1"]]],
+      weekLabel: "Qualquer modalidade de endurance · fase de base"
+    }
+  };
+
+  function factsHtml(f) { return '<dl class="facts">' + f.map(function (x) { return "<div><dt>" + x[0] + "</dt><dd>" + esc(x[1]) + "</dd></div>"; }).join("") + "</dl>"; }
+  function keysHtml(k, c) { return '<ul class="keys">' + k.map(function (x) { return '<li style="--c:' + c + '"><b>' + esc(x[0]) + "</b><span>" + esc(x[1]) + "</span></li>"; }).join("") + "</ul>"; }
+
+  function tabButtons(box, items, current, dots) {
+    box.innerHTML = Object.keys(items).map(function (k) {
+      var it = items[k];
+      var mark = dots ? '<span class="dots">' + it.sports.map(function (s) { return '<i style="background:' + SPORT[s].c + '"></i>'; }).join("") + "</span>" : '<i style="background:' + it.color + '"></i>';
+      return '<button type="button" role="tab" id="tab-' + k + '" data-k="' + k + '" aria-selected="' + (k === current) + '">' + mark + esc(it.tab) + "</button>";
+    }).join("");
+  }
+
+  function renderSport(k) {
+    var s = SPORTS[k];
+    tabButtons($("sport-tabs"), SPORTS, k, false);
+    var phases = s.macro.phases.map(function (p, i) {
+      return '<div class="phase-card" style="background:var(--surface-2)"><span class="bar" style="background:' + PH[i] + '"></span><b>' + esc(p.name) + "<small>" + p.vols.length + " sem.</small></b><p>" + esc(p.focus) + "</p></div>";
+    }).join("");
+    $("sport-panel").setAttribute("aria-labelledby", "tab-" + k);
+    $("sport-panel").innerHTML =
+      '<div class="sport-head"><div><h3><i style="background:' + s.color + '"></i>' + esc(s.title) + '</h3><p class="why">' + esc(s.why) + "</p></div>" + factsHtml(s.facts) + "</div>" +
+      '<div><p class="sub">Macrociclo · ' + esc(s.macro.label) + '</p><p class="note">Barras claras: semanas de alívio. Passe o mouse ou o foco numa barra para ver o valor.</p></div>' +
+      '<div class="chart chart-scroll" id="macro-chart" role="img" aria-label="Volume por semana do exemplo, colorido por fase"></div>' +
+      '<div class="phase-cards">' + phases + "</div>" +
+      '<div><p class="sub">Semana-tipo</p><p class="note">' + esc(s.weekLabel) + "</p></div>" + weekMeta(s.week) + weekHtml(s.week) +
+      '<div class="cols"><div><p class="sub">Sessões que não negocio</p>' + keysHtml(s.keys, s.color) + "</div>" +
+      '<div style="display:grid;gap:16px;align-content:start"><div><p class="sub">Polimento</p><p style="font-size:15px">' + esc(s.taper) + '</p></div><div><p class="sub">Erros que mais corrijo</p><ul class="plain">' +
+      s.errors.map(function (e) { return "<li>" + esc(e) + "</li>"; }).join("") + "</ul></div></div></div>";
+    var chart = $("macro-chart");
+    var svgWrap = document.createElement("div");
+    svgWrap.style.minWidth = "560px";
+    chart.appendChild(svgWrap);
+    drawMacro(svgWrap, s.macro, s.color);
+  }
+
+  function renderCombo(k) {
+    var c = COMBOS[k];
+    tabButtons($("combo-tabs"), COMBOS, k, true);
+    var series = c.series.map(function (s) { return { name: SPORT[s].name, short: "", c: SPORT[s].c, ink: SPORT[s].ink }; });
+    $("combo-panel").setAttribute("aria-labelledby", "tab-" + k);
+    $("combo-panel").innerHTML =
+      '<div class="sport-head"><div><h3><span style="display:inline-flex;gap:4px">' + c.sports.map(function (s) { return '<i style="background:' + SPORT[s].c + '"></i>'; }).join("") + "</span>" + esc(c.title) +
+      '</h3><p class="why">' + esc(c.why) + '</p></div><div><p class="sub">Regras que aplico</p><ul class="plain">' + c.rules.map(function (r) { return "<li>" + esc(r) + "</li>"; }).join("") + "</ul></div></div>" +
+      '<div><p class="sub">Divisão do tempo por fase</p><p class="note">Porcentagem das horas de treino da semana em cada modalidade.</p></div>' +
+      '<ul class="legend" aria-hidden="true">' + c.series.map(function (s) { return '<li><span class="sw" style="background:' + SPORT[s].c + '"></span>' + SPORT[s].name + "</li>"; }).join("") + "</ul>" +
+      '<div class="chart" id="combo-chart" role="img" aria-label="Barras empilhadas com a divisão do tempo entre as modalidades em cada fase"></div>' +
+      '<div><p class="sub">Semana-tipo</p><p class="note">' + esc(c.weekLabel) + ". Tracejado: sessões encadeadas (brick).</p></div>" + weekMeta(c.week) + weekHtml(c.week) +
+      '<div><p class="sub">Sessões combinadas</p>' + keysHtml(c.keys, "var(--ink)") + "</div>";
+    drawStack($("combo-chart"), c.shares.map(function (r, i) { return { label: PHASE_NAMES[i], values: r }; }), series, { short: false });
+  }
+
+  function bindTabs(box, render, keys) {
+    box.addEventListener("click", function (e) { var b = e.target.closest("button[data-k]"); if (b) render(b.getAttribute("data-k")); });
+    box.addEventListener("keydown", function (e) {
+      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      var cur = box.querySelector('[aria-selected="true"]').getAttribute("data-k");
+      var i = keys.indexOf(cur) + (e.key === "ArrowRight" ? 1 : -1);
+      var next = keys[(i + keys.length) % keys.length];
+      render(next);
+      box.querySelector('[data-k="' + next + '"]').focus();
+    });
+  }
+  bindTabs($("sport-tabs"), renderSport, Object.keys(SPORTS));
+  bindTabs($("combo-tabs"), renderCombo, Object.keys(COMBOS));
+  renderSport("run");
+  renderCombo("tri");
+
+  // ---------- Matriz de compatibilidade ----------
+  var TYPES = [
+    ["R+", "run", "hard", "Corrida intensa"], ["RL", "run", "long", "Corrida longa"], ["R-", "run", "easy", "Corrida leve"],
+    ["B+", "bike", "hard", "Bike intensa"], ["BL", "bike", "long", "Bike longa"], ["B-", "bike", "easy", "Bike leve"],
+    ["S+", "swim", "hard", "Natação intensa"], ["S-", "swim", "easy", "Natação técnica"],
+    ["F+", "gym", "heavy", "Força pesada de pernas"], ["F-", "gym", "light", "Core e força leve"]
+  ];
+  var T = {};
+  TYPES.forEach(function (t) { T[t[0]] = { sp: t[1], k: t[2], n: t[3] }; });
+  function verdict(a, b) {
+    var A = T[a], B = T[b];
+    if (a === "F-" || b === "F-") return ["ok", "Core e força leve cabem em qualquer dia, de preferência depois da sessão principal."];
+    if (a === "F+" && b === "F+") return ["no", "Uma sessão pesada por dia basta."];
+    if (a === "F+") {
+      if (B.sp === "swim") return ["ok", "Pouca interferência: a natação depende mais dos membros superiores."];
+      if (B.k === "easy") return ["ok", "Giro ou trote leve depois da força ajuda a recuperar."];
+      return ["no", "Pernas cansadas pela força tiram qualidade da sessão de endurance e pioram a mecânica."];
+    }
+    if (b === "F+") {
+      if (A.sp === "swim") return ["ok", "Natação antes não atrapalha a força de pernas."];
+      if (A.k === "easy") return ["ok", "Sessão leve antes e força depois: combinação comum e segura."];
+      if (A.k === "hard") return ["mid", "Faça a força depois, com 6 h ou mais de intervalo. Concentra o estresse no mesmo dia e deixa o dia seguinte leve."];
+      return ["no", "Depois de uma sessão longa, a força pesada aumenta o dano muscular e atrasa a recuperação."];
+    }
+    if (A.sp === B.sp) {
+      if (A.k === "easy" && B.k === "easy") return A.sp === "run" ? ["mid", "Corrida dupla só para quem já corre volume alto (60 km ou mais por semana)."] : ["ok", "Duas sessões leves da mesma modalidade."];
+      if (A.k === "easy" || B.k === "easy") {
+        if (A.sp === "run") return ["mid", "Duas corridas no dia somam impacto. Só com volume alto e a leve bem curta."];
+        if (A.sp === "swim") return ["ok", "Técnica antes ou depois de uma série forte funciona bem."];
+        return ["ok", "Um giro leve complementa a sessão principal."];
+      }
+      return ["no", "Duas sessões fortes ou longas da mesma modalidade no mesmo dia."];
+    }
+    if (A.sp === "bike" && B.sp === "run") {
+      if (B.k === "easy") return ["ok", "Brick leve: 15′ a 30′ de trote depois da bike ensina a transição sem custo alto."];
+      if (A.k === "long" && B.k === "hard") return ["mid", "Brick de prova: só no específico, a cada 2 a 3 semanas."];
+      if (A.k === "long" && B.k === "long") return ["no", "Bike longa e corrida longa no mesmo dia custam caro demais para recuperar."];
+      if (A.k === "hard" && B.k === "hard") return ["mid", "Brick intenso: ótimo para triathlon curto e duathlon, 1× por semana."];
+      return ["mid", "Corrida longa logo depois de bike intensa: só em simulação de prova."];
+    }
+    if (A.k === "easy" || B.k === "easy") return ["ok", "Uma sessão leve de outra modalidade não compete com a principal."];
+    if (A.k === "long" && B.k === "long") return ["no", "Duas sessões longas no mesmo dia: só em simulação de prova."];
+    if (A.k === "long" || B.k === "long") {
+      if (A.sp === "swim" || B.sp === "swim") return ["mid", "Natação forte e uma sessão longa no mesmo dia: possível com 4 a 6 h entre elas."];
+      return ["no", "Sessão longa e sessão intensa no mesmo dia: uma das duas perde qualidade."];
+    }
+    return ["mid", "Dia duro planejado: duas sessões intensas de modalidades diferentes, com 4 a 6 h entre elas, para deixar os outros dias realmente leves."];
+  }
+  var ICON = { ok: "✓", mid: "◷", no: "✕" }, WORD = { ok: "Combina", mid: "Com condição", no: "Evito" };
+  (function matrix() {
+    var head = "<thead><tr><th>1ª ↓ · 2ª →</th>" + TYPES.map(function (t) { return '<th scope="col"><i style="background:' + SPORT[t[1]].c + '"></i><br>' + esc(t[3]) + "</th>"; }).join("") + "</tr></thead>";
+    var body = "<tbody>" + TYPES.map(function (r) {
+      return '<tr><th scope="row"><i style="background:' + SPORT[r[1]].c + '"></i>' + esc(r[3]) + "</th>" + TYPES.map(function (c) {
+        var v = verdict(r[0], c[0]);
+        return '<td><button type="button" class="cell ' + v[0] + '" data-a="' + r[0] + '" data-b="' + c[0] + '" aria-pressed="false" aria-label="' + esc(r[3] + " e depois " + c[3] + ": " + WORD[v[0]]) + '">' + ICON[v[0]] + "</button></td>";
+      }).join("") + "</tr>";
+    }).join("") + "</tbody>";
+    $("matrix").innerHTML = head + body;
+    function pick(a, b) {
+      var v = verdict(a, b);
+      document.querySelectorAll("#matrix .cell").forEach(function (c) { c.setAttribute("aria-pressed", String(c.getAttribute("data-a") === a && c.getAttribute("data-b") === b)); });
+      var box = $("verdict");
+      box.className = "verdict " + v[0];
+      box.innerHTML = "<b>" + ICON[v[0]] + " " + WORD[v[0]] + ": " + esc(T[a].n) + " e depois " + esc(T[b].n).toLowerCase() + "</b><span>" + esc(v[1]) + "</span>";
+    }
+    $("matrix").addEventListener("click", function (e) { var c = e.target.closest(".cell"); if (c) pick(c.getAttribute("data-a"), c.getAttribute("data-b")); });
+    pick("R+", "F+");
+  })();
+
+  // ---------- Recomendações para a Endurance Forge ----------
+  var RECS = [
+    ["Distribuição de intensidade da corrida", "Hoje: CF com no mínimo 20% e CM com no mínimo 25% da semana.",
+      "Isso põe pelo menos 45% do volume entre os limiares: um modelo de limiar. Funciona para quem corre 3 ou 4 vezes por semana. Com 5 corridas ou mais, eu tornaria os mínimos dependentes da fase e transformaria Z2 + Z3 em teto (20% a 25% do tempo), garantindo 75% a 80% em Z1."],
+    ["Salto de 30% no modelo 3:1", "Hoje: aumento de até 30% a cada 4ª semana.",
+      "Para principiante e iniciante, ou acima de ~60 km por semana, limitaria o salto a 15% a 20%. Em corredores novatos, aumentos acima de 30% em duas semanas se associaram a mais lesões por sobrecarga (Nielsen, 2014). Para os demais níveis, o 3:1 é um bom degrau."],
+    ["Modelo alternado", "Hoje: acréscimo de até 10% e semana regenerativa.",
+      "É o modelo que eu escolheria por padrão para atletas com 50 anos ou mais, para retorno de lesão e para fases com muito estresse fora do treino. Sugiro que a engine o sugira automaticamente nesses casos."],
+    ["Polimento", "Hoje: a planilha não define; a engine usa um complemento.",
+      "Eu fixaria pela literatura: cerca de 2 semanas, volume reduzido em 41% a 60%, intensidade e frequência mantidas (Bosquet, 2007). O complemento atual já está perto disso; formalizar evita que ele mude sem querer."],
+    ["Exercício resistido", "Hoje: a planilha fixa o número de sessões (coluna G) para o plano inteiro.",
+      "Manteria o número na base, mas periodizaria o conteúdo (adaptação, força máxima, potência, manutenção) e cairia para 1 sessão no específico, com a última pesada 7 a 10 dias antes da prova."],
+    ["Multisport Engine", "Hoje: distribui os dias e soma a carga das modalidades.",
+      "Usaria a matriz de compatibilidade acima como tabela de restrições na hora de alocar os dias e manteria um teto de impacto da corrida separado da carga total, para que mais horas de bike nunca liberem mais corrida."]
+  ];
+  $("recs").innerHTML = RECS.map(function (r) {
+    return '<div class="rec"><div><h3>' + esc(r[0]) + '</h3><p class="now">' + esc(r[1]) + "</p></div><p>" + esc(r[2]) + "</p></div>";
+  }).join("");
+})();
+</script>
