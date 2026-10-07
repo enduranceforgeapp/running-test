@@ -1,0 +1,1041 @@
+<title>Endurance Forge Volume</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: o mesmo da Endurance Forge (formulário à esquerda, plano à direita). O plano abre com o
+   resumo, a linha da planilha aplicada (células H a K), os pré-requisitos e o volume semana a semana. */
+:root {
+  color-scheme: light;
+  --bg: #eef3f9;
+  --surface: #ffffff;
+  --surface-2: #f5f8fc;
+  --ink: #0f1b2d;
+  --muted: #50607a;
+  --faint: #8594ab;
+  --line: #d6e0ec;
+  --accent: #0a6ae6;
+  --accent-hi: #2a86ff;
+  --accent-text: #0a5fcf;
+  --accent-soft: #e3eefd;
+  --accent-ink: #ffffff;
+  --warn-ink: #8a4b06;
+  --warn-bg: #fdf1dd;
+  --warn-line: #f0cf95;
+  --error-ink: #9f1d1d;
+  --error-bg: #fde8e8;
+  --error-line: #f1b9b9;
+  --ok-ink: #1f6b3a;
+  --ok-bg: #e3f3e7;
+  --info-ink: #3b4a63;
+  --info-bg: #e6ebf3;
+  --p1: #2a78d6;
+  --p3: #1baf7a;
+  --p4: #eda100;
+  --gym: #5a49b8;
+  --gym-soft: #ebe8fb;
+  --cell: #f3f6f2;
+  --cell-head: #e2e8df;
+  --bib: #ffffff;
+  --bib-ink: #0f1b2d;
+  --shadow: 0 1px 2px rgba(15, 27, 45, .06), 0 4px 16px rgba(15, 27, 45, .06);
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", system-ui, sans-serif;
+  --body: "Barlow", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #07111f; --surface: #0c1a2e; --surface-2: #102139; --ink: #e8f0fb; --muted: #9fb1cb; --faint: #6c7f9c;
+    --line: #22385a; --accent: #1872e0; --accent-hi: #2f8bff; --accent-text: #6cb0ff; --accent-soft: #13294a; --accent-ink: #ffffff;
+    --warn-ink: #f5c77e; --warn-bg: #2d2412; --warn-line: #5c4518; --error-ink: #ffb3b3; --error-bg: #3a1a1a; --error-line: #6a2c2c;
+    --ok-ink: #7fd494; --ok-bg: #16301f; --info-ink: #b9c7de; --info-bg: #1a263a;
+    --p1: #3987e5; --p3: #199e70; --p4: #c98500; --gym: #9d90ef; --gym-soft: #221d44;
+    --cell: #0f2033; --cell-head: #16304a; --bib: #e8f0fb; --bib-ink: #07111f; --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #07111f; --surface: #0c1a2e; --surface-2: #102139; --ink: #e8f0fb; --muted: #9fb1cb; --faint: #6c7f9c;
+  --line: #22385a; --accent: #1872e0; --accent-hi: #2f8bff; --accent-text: #6cb0ff; --accent-soft: #13294a; --accent-ink: #ffffff;
+  --warn-ink: #f5c77e; --warn-bg: #2d2412; --warn-line: #5c4518; --error-ink: #ffb3b3; --error-bg: #3a1a1a; --error-line: #6a2c2c;
+  --ok-ink: #7fd494; --ok-bg: #16301f; --info-ink: #b9c7de; --info-bg: #1a263a;
+  --p1: #3987e5; --p3: #199e70; --p4: #c98500; --gym: #9d90ef; --gym-soft: #221d44;
+  --cell: #0f2033; --cell-head: #16304a; --bib: #e8f0fb; --bib-ink: #07111f; --shadow: none;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 15px/1.5 var(--body); font-variant-numeric: tabular-nums; }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; line-height: 1.1; margin: 0; text-wrap: balance; }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
+
+.shell {
+  display: grid; grid-template-columns: minmax(300px, 360px) minmax(0, 1fr); gap: 24px;
+  max-width: 1360px; margin: 0 auto; padding-inline: 24px; padding-block: 24px 64px; align-items: start;
+}
+@media (max-width: 900px) { .shell { grid-template-columns: minmax(0, 1fr); padding-inline: 16px; } }
+
+/* ---------- Formulário ---------- */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); }
+form.panel {
+  position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px);
+  max-height: calc(100vh - 32px - env(safe-area-inset-top, 0px)); overflow-y: auto; overscroll-behavior: contain;
+  padding: 20px; display: grid; gap: 18px;
+}
+@media (max-width: 900px) { form.panel { position: static; max-height: none; overflow: visible; } }
+.brand { display: grid; gap: 4px; }
+.brand h1 { font-size: 30px; letter-spacing: .01em; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.brand h1 span {
+  font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--accent-text); background: var(--accent-soft); padding: 2px 8px; border-radius: 4px;
+}
+.brand p { margin: 0; color: var(--muted); font-size: 14px; }
+fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 8px; min-width: 0; }
+legend { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 0; margin-bottom: 2px; }
+.hint { font-size: 12.5px; color: var(--faint); margin: 0; }
+.hint.alert { color: var(--warn-ink); font-weight: 500; }
+.hint.live { color: var(--muted); }
+.hint.live b { color: var(--ink); font-weight: 600; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.field { display: grid; gap: 4px; min-width: 0; }
+.field label { font-size: 13px; color: var(--muted); }
+input[type="number"], input[type="text"], input[type="date"], select {
+  width: 100%; padding: 9px 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface-2); min-height: 40px;
+}
+input:hover, select:hover { border-color: var(--faint); }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label {
+  flex: 1 1 0; min-width: 48px; text-align: center; padding: 8px 6px; border: 1px solid var(--line); border-radius: 7px;
+  background: var(--surface-2); cursor: pointer; font-family: var(--display); font-weight: 600; font-size: 17px; line-height: 1.2; user-select: none;
+}
+.seg.compact label { font-size: 15px; padding: 7px 2px; }
+.seg.week-days { flex-wrap: nowrap; gap: 4px; }
+.seg.week-days label { min-width: 0; padding: 8px 0; font-size: 15px; }
+.seg input:checked + label { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.seg input:focus-visible + label { outline: 2px solid var(--accent-text); outline-offset: 2px; }
+.seg input:disabled + label { cursor: default; opacity: .55; }
+.seg input:checked:disabled + label { opacity: .8; }
+@media (max-width: 400px) { .seg.compact label { font-size: 13px; padding: 7px 1px; } .seg.week-days label { font-size: 13.5px; } }
+@media (max-width: 340px) { .seg.compact label { font-size: 11.5px; } .seg.week-days label { font-size: 12px; } }
+.pref { display: grid; gap: 4px; }
+.pref-label { font-size: 13px; color: var(--muted); }
+details.more > summary { cursor: pointer; font-size: 13px; color: var(--muted); list-style: none; }
+details.more > summary::before { content: "+ "; }
+details.more[open] > summary::before { content: "− "; }
+details.more > div { display: grid; gap: 12px; margin-top: 12px; }
+.primary {
+  border: 0; border-radius: 8px; padding: 12px 16px; background: linear-gradient(180deg, var(--accent-hi), var(--accent));
+  color: var(--accent-ink); font-family: var(--display); font-weight: 600; font-size: 19px; letter-spacing: .02em; cursor: pointer;
+}
+.primary:hover { filter: brightness(1.08); }
+.primary[disabled] { opacity: .6; cursor: progress; }
+.error { margin: 0; padding: 10px 12px; border-radius: 7px; background: var(--error-bg); color: var(--error-ink); font-size: 14px; }
+.check { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; cursor: pointer; }
+.check input { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--accent); flex: none; }
+.event-list { display: grid; gap: 8px; }
+.event-list:empty { display: none; }
+.event { display: grid; gap: 8px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); }
+.event input, .event select { background: var(--surface); }
+.event .ev-remove { justify-self: end; border: 0; background: none; color: var(--muted); font-size: 13px; cursor: pointer; padding: 2px 4px; text-decoration: underline; }
+.ghost { border: 1px solid var(--line); background: var(--surface-2); border-radius: 7px; padding: 7px 12px; font-size: 13.5px; cursor: pointer; }
+.ghost:hover { border-color: var(--faint); }
+
+/* ---------- Resultado ---------- */
+main { display: grid; gap: 20px; min-width: 0; }
+.example-note { margin: 0; font-size: 13.5px; color: var(--muted); padding: 8px 12px; border: 1px dashed var(--line); border-radius: 8px; }
+.section { padding: 20px; display: grid; gap: 14px; min-width: 0; }
+.section-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; }
+.section-head h2, .section > h2 { font-size: 24px; }
+.section-head p, .lead { margin: 0; color: var(--muted); font-size: 14px; max-width: 70ch; }
+
+.summary { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 20px; padding: 20px; align-items: center; }
+@media (max-width: 620px) { .summary { grid-template-columns: minmax(0, 1fr); } }
+.bib { position: relative; background: var(--bib); color: var(--bib-ink); border: 2px solid var(--ink); border-radius: 6px; padding: 18px 26px 14px; text-align: center; min-width: 220px; }
+.bib::before, .bib::after, .bib .pins::before, .bib .pins::after {
+  content: ""; position: absolute; width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--ink); background: var(--bg);
+}
+.bib::before { top: 8px; left: 8px; } .bib::after { top: 8px; right: 8px; }
+.bib .pins::before { bottom: 8px; left: 8px; } .bib .pins::after { bottom: 8px; right: 8px; }
+.bib .race { font-family: var(--display); font-weight: 600; font-size: 14px; letter-spacing: .12em; text-transform: uppercase; }
+.bib .time { font-family: var(--display); font-weight: 700; font-size: 56px; line-height: 1; letter-spacing: .01em; }
+.bib .time small { font-size: 22px; font-weight: 600; margin-left: 4px; }
+.bib .pace { font-size: 13px; opacity: .8; }
+.bib .proj { font-size: 12px; opacity: .7; margin-top: 2px; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px 24px; margin: 0; }
+.facts div { display: grid; gap: 2px; align-content: start; }
+.facts dt { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.facts dd { margin: 0; font-family: var(--display); font-weight: 600; font-size: 24px; overflow-wrap: anywhere; line-height: 1.15; }
+.facts dd small { display: block; font-family: var(--body); font-weight: 400; font-size: 13px; color: var(--muted); }
+@media (max-width: 560px) { .bib .time { font-size: 46px; } }
+
+.alerts { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.alerts li { padding: 11px 14px; border-radius: 9px; font-size: 14px; border: 1px solid transparent; display: grid; gap: 8px; }
+.alerts li.bad { background: var(--error-bg); color: var(--error-ink); border-color: var(--error-line); font-weight: 500; }
+.alerts li.warn { background: var(--warn-bg); color: var(--warn-ink); border-color: var(--warn-line); }
+.alerts li.info { background: var(--info-bg); color: var(--info-ink); }
+.alerts li .ghost { justify-self: start; background: var(--surface); color: var(--ink); }
+
+/* Linha da planilha: as células H a K com a fórmula de cada uma */
+.cells { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+@media (max-width: 700px) { .cells { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.cell { background: var(--cell); display: grid; grid-template-rows: auto 1fr auto; min-width: 0; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); margin: 0 -1px -1px 0; }
+.cell .ref { font: 500 12px/1 var(--mono); color: var(--muted); background: var(--cell-head); padding: 6px 10px; display: flex; justify-content: space-between; gap: 8px; }
+.cell .ref b { font-weight: 500; color: var(--ink); }
+.cell .v { font-family: var(--display); font-weight: 700; font-size: 32px; line-height: 1.1; padding: 10px 10px 2px; }
+.cell .v small { font-size: 16px; font-weight: 600; color: var(--muted); margin-left: 3px; }
+.cell .f { font-size: 12.5px; color: var(--muted); padding: 0 10px 10px; line-height: 1.35; }
+.cell .f code { font: 500 12px var(--mono); color: var(--ink); }
+.rowmeta { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14px; color: var(--muted); margin: 0; }
+.rowmeta b { color: var(--ink); font-weight: 600; }
+
+/* Pré-requisitos */
+.gates { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 700px) { .gates { grid-template-columns: minmax(0, 1fr); } }
+.gate { border: 1px solid var(--line); border-radius: 9px; padding: 14px; display: grid; gap: 10px; align-content: start; background: var(--surface-2); min-width: 0; }
+.gate-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 10px; }
+.gate-head h3 { font-size: 19px; }
+.gate-head .k { font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); display: block; font-family: var(--body); font-weight: 600; }
+.status { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+.status.ok { background: var(--ok-bg); color: var(--ok-ink); }
+.status.no { background: var(--error-bg); color: var(--error-ink); }
+.status.na { background: var(--surface); color: var(--muted); border: 1px solid var(--line); }
+.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14px; }
+.checks li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 6px; align-items: start; }
+.checks .mark { font-weight: 700; text-align: center; }
+.checks .ok .mark { color: var(--ok-ink); }
+.checks .no .mark { color: var(--error-ink); }
+.checks small { display: block; color: var(--muted); font-size: 12.5px; }
+.gate .quote { margin: 0; font-size: 12.5px; color: var(--muted); font-style: italic; }
+
+/* Gráfico */
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); margin: 0; padding: 0; list-style: none; }
+.legend li { display: inline-flex; align-items: center; gap: 6px; }
+.swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.swatch.line { height: 0; width: 18px; border-top: 2px dashed var(--ink); border-radius: 0; }
+.chart-wrap { position: relative; overflow-x: auto; padding-top: 4px; }
+.chart-wrap svg { display: block; width: 100%; min-width: 520px; height: auto; }
+.chart-wrap .bar { cursor: pointer; }
+.chart-wrap .bar:hover path, .chart-wrap .bar:focus path { filter: brightness(1.12); }
+.tooltip {
+  position: absolute; pointer-events: none; z-index: 2; background: var(--ink); color: var(--surface);
+  padding: 6px 9px; border-radius: 6px; font-size: 12.5px; line-height: 1.35; white-space: nowrap; transform: translate(-50%, calc(-100% - 8px));
+}
+
+/* Semanas */
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.weeks { display: grid; gap: 10px; }
+details.week { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); overflow: hidden; }
+details.week > summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 4px 14px; align-items: center; padding: 12px 16px; }
+details.week > summary::-webkit-details-marker { display: none; }
+.wk-num { font-family: var(--display); font-weight: 700; font-size: 28px; line-height: 1; }
+.wk-num small { display: block; font-family: var(--body); font-weight: 500; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.wk-mid { display: grid; gap: 3px; min-width: 0; }
+.wk-tags { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink); }
+.pill .swatch { width: 9px; height: 9px; border-radius: 50%; }
+.wk-focus { font-size: 13.5px; color: var(--muted); }
+.wk-km { font-family: var(--display); font-weight: 600; font-size: 24px; text-align: right; }
+.wk-km small { font-family: var(--body); font-weight: 400; font-size: 12px; color: var(--muted); }
+.days { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.day { display: grid; grid-template-columns: 64px minmax(0, 1fr) 64px; gap: 4px 14px; padding: 11px 16px; border-bottom: 1px solid var(--line); }
+.day:last-child { border-bottom: 0; }
+.day-name { font-weight: 600; }
+.day-name small { display: block; font-weight: 400; font-size: 12px; color: var(--muted); }
+.day-items { display: grid; gap: 4px; min-width: 0; }
+.day-title { font-weight: 600; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.day-title .note { font-weight: 400; font-size: 13px; color: var(--muted); font-style: italic; }
+.tag { font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; padding: 1px 6px; border-radius: 4px; background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); }
+.tag.longao { background: var(--ink); color: var(--surface); border-color: transparent; }
+.tag.forca { background: var(--gym-soft); color: var(--gym); border-color: transparent; }
+.tag.prova { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+.tag.teste { background: var(--accent-soft); color: var(--accent-text); border-color: transparent; }
+.day.rest .day-title { font-weight: 400; color: var(--muted); }
+.day-km { font-family: var(--display); font-weight: 600; font-size: 19px; text-align: right; }
+@media (max-width: 560px) {
+  details.week > summary { grid-template-columns: 52px minmax(0, 1fr) auto; padding: 12px; }
+  .day { grid-template-columns: 44px minmax(0, 1fr) 48px; padding: 11px 12px; gap: 4px 10px; }
+}
+details.why { border-top: 1px solid var(--line); padding: 10px 16px 12px; }
+details.why > summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--accent-text); list-style: none; }
+details.why > summary::-webkit-details-marker { display: none; }
+details.why > summary::before { content: "+ "; }
+details.why[open] > summary::before { content: "− "; }
+.why-list { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 5px; font-size: 13.5px; color: var(--muted); }
+.why-list b { color: var(--ink); font-weight: 600; }
+details.plan-why > summary { cursor: pointer; list-style: none; }
+details.plan-why > summary::-webkit-details-marker { display: none; }
+details.plan-why > summary h2 { display: inline; }
+details.plan-why > summary::after { content: " +"; color: var(--muted); font-size: 18px; }
+details.plan-why[open] > summary::after { content: " −"; }
+.copy-box { display: grid; gap: 6px; }
+.copy-box textarea { width: 100%; font: 13px/1.45 var(--mono); padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); color: var(--ink); }
+.events-plan ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.events-plan li { display: grid; gap: 2px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); }
+.events-plan .ev-what { font-weight: 600; }
+.events-plan .ev-meta { color: var(--muted); font-size: 13.5px; }
+
+/* Regras e tabela */
+.rules { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 760px) { .rules { grid-template-columns: minmax(0, 1fr); } }
+.rules h3 { font-size: 19px; display: flex; align-items: center; gap: 8px; }
+.rules dl { margin: 8px 0 0; display: grid; gap: 8px; }
+.rules dt { font-weight: 600; font-size: 14px; }
+.rules dd { margin: 0; color: var(--muted); font-size: 14px; }
+.src { font: 500 11px/1 var(--mono); padding: 3px 6px; border-radius: 4px; background: var(--cell-head); color: var(--ink); letter-spacing: 0; }
+.src.add { background: var(--warn-bg); color: var(--warn-ink); }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; min-width: 860px; font-size: 13.5px; }
+th, td { padding: 7px 9px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+th { font-size: 11.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); background: var(--surface-2); font-weight: 600; }
+th:nth-child(-n+4), td:nth-child(-n+4) { text-align: left; }
+td.ln { font-family: var(--mono); color: var(--muted); font-size: 12.5px; }
+tr.group td { border-top: 2px solid var(--line); }
+tr.current td { background: var(--accent-soft); font-weight: 600; }
+tr.current td.ln { color: var(--accent-text); }
+table caption { caption-side: bottom; text-align: left; font-size: 12.5px; color: var(--muted); padding: 8px 10px; }
+details.sheet > summary { cursor: pointer; list-style: none; }
+details.sheet > summary::-webkit-details-marker { display: none; }
+details.sheet > summary h2 { display: inline; }
+details.sheet > summary::after { content: " +"; color: var(--muted); font-size: 18px; }
+details.sheet[open] > summary::after { content: " −"; }
+.notes { margin: 0; padding-left: 18px; display: grid; gap: 6px; color: var(--muted); font-size: 14px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 13px; padding: 3px 10px; border-radius: 999px; border: 1px dashed var(--faint); color: var(--muted); }
+.disclaimer { font-size: 12.5px; color: var(--faint); margin: 0; }
+@media (prefers-reduced-motion: no-preference) { .ghost, .seg label { transition: background-color .12s, border-color .12s; } }
+</style>
+
+<div class="shell">
+  <form class="panel" id="plan-form" novalidate>
+    <div class="brand">
+      <h1>Endurance Forge <span>Volume</span></h1>
+      <p>Plano de corrida pelas regras de controle de volume: do 5 km à ultra.</p>
+    </div>
+
+    <fieldset>
+      <legend>Prova-alvo</legend>
+      <div class="seg" id="distance-seg">
+        <input type="radio" name="distance" id="d-5k" value="5k"><label for="d-5k">5K</label>
+        <input type="radio" name="distance" id="d-10k" value="10k" checked><label for="d-10k">10K</label>
+        <input type="radio" name="distance" id="d-21k" value="21k"><label for="d-21k">21K</label>
+        <input type="radio" name="distance" id="d-42k" value="42k"><label for="d-42k">42K</label>
+        <input type="radio" name="distance" id="d-50k" value="50k"><label for="d-50k">Ultra</label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Percurso da prova</legend>
+      <div class="pref">
+        <span class="pref-label" id="lbl-terrain">Terreno</span>
+        <div class="seg compact" role="radiogroup" aria-labelledby="lbl-terrain">
+          <input type="radio" name="terrain" id="ter-plano" value="plano" checked><label for="ter-plano">Plano</label>
+          <input type="radio" name="terrain" id="ter-ondulado" value="ondulado"><label for="ter-ondulado">Ondulado</label>
+          <input type="radio" name="terrain" id="ter-montanhoso" value="montanhoso"><label for="ter-montanhoso">Montanha</label>
+        </div>
+      </div>
+      <div class="row">
+        <div class="pref">
+          <span class="pref-label" id="lbl-surface">Superfície</span>
+          <div class="seg compact" role="radiogroup" aria-labelledby="lbl-surface">
+            <input type="radio" name="surface" id="sur-asfalto" value="asfalto" checked><label for="sur-asfalto">Asfalto</label>
+            <input type="radio" name="surface" id="sur-trilha" value="trilha"><label for="sur-trilha">Trilha</label>
+          </div>
+        </div>
+        <div class="field">
+          <label for="elevation">Subida total (D+, m)</label>
+          <input type="text" id="elevation" placeholder="opcional" inputmode="numeric" pattern="[0-9]*" maxlength="5" autocomplete="off">
+        </div>
+      </div>
+      <p class="hint">A planilha não tem regra de percurso: ele fica registrado no resumo, sem mudar o volume.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Prazo</legend>
+      <div class="seg">
+        <input type="radio" name="deadline" id="dl-weeks" value="weeks" checked><label for="dl-weeks">Semanas</label>
+        <input type="radio" name="deadline" id="dl-date" value="date"><label for="dl-date">Data da prova</label>
+      </div>
+      <div class="field" id="weeks-field">
+        <label for="weeks">Duração do plano (semanas)</label>
+        <input type="number" id="weeks" min="1" max="52" step="1" value="16" inputmode="numeric">
+      </div>
+      <div class="field" id="date-field" hidden>
+        <label for="race-date">Data da prova</label>
+        <input type="date" id="race-date">
+      </div>
+      <p class="hint live" id="weeks-hint"></p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Como você corre hoje</legend>
+      <div class="row">
+        <div class="field">
+          <label for="weekly-km">Km por semana</label>
+          <input type="number" id="weekly-km" min="0" step="1" value="30" inputmode="decimal">
+        </div>
+        <div class="field">
+          <label for="longest-run">Maior corrida (km)</label>
+          <input type="number" id="longest-run" min="0" step="0.5" value="9" inputmode="decimal">
+        </div>
+      </div>
+      <p class="hint">Média das últimas 4 semanas. Os dois valores são conferidos com o pré-requisito da distância.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Dias em que você corre</legend>
+      <div class="seg week-days" id="days-seg">
+        <input type="checkbox" name="run-day" id="rd-0" value="0"><label for="rd-0">Seg</label>
+        <input type="checkbox" name="run-day" id="rd-1" value="1" checked><label for="rd-1">Ter</label>
+        <input type="checkbox" name="run-day" id="rd-2" value="2" checked><label for="rd-2">Qua</label>
+        <input type="checkbox" name="run-day" id="rd-3" value="3" checked><label for="rd-3">Qui</label>
+        <input type="checkbox" name="run-day" id="rd-4" value="4"><label for="rd-4">Sex</label>
+        <input type="checkbox" name="run-day" id="rd-5" value="5" checked><label for="rd-5">Sáb</label>
+        <input type="checkbox" name="run-day" id="rd-6" value="6" checked><label for="rd-6">Dom</label>
+      </div>
+      <p class="hint live" id="days-hint"></p>
+      <div class="field">
+        <label for="long-day">Dia do longão</label>
+        <select id="long-day"><option value="">Automático</option></select>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Prova recente (define o nível)</legend>
+      <div class="row">
+        <div class="field">
+          <label for="recent-distance">Distância</label>
+          <select id="recent-distance">
+            <option value="">Nenhuma</option>
+            <option value="3">3 km</option>
+            <option value="5" selected>5 km</option>
+            <option value="10">10 km</option>
+            <option value="15">15 km</option>
+            <option value="21.0975">21,1 km</option>
+            <option value="42.195">42,2 km</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="recent-time">Tempo</label>
+          <input type="text" id="recent-time" class="time-input" placeholder="25:00" value="25:00" inputmode="numeric" pattern="[0-9:]*" maxlength="8" autocomplete="off">
+        </div>
+      </div>
+      <p class="hint live" id="level-hint"></p>
+      <div class="field">
+        <label for="goal-time">Tempo-alvo (opcional)</label>
+        <input type="text" id="goal-time" class="time-input" placeholder="ex.: 52:00" inputmode="numeric" pattern="[0-9:]*" maxlength="8" autocomplete="off">
+      </div>
+      <p class="hint">Nos tempos, digite só os números: 2500 vira 25:00 e 15500 vira 1:55:00. A velocidade média da prova recente é a velocidade de nivelamento da planilha. A meta não muda o nível: o plano mostra em que faixa de velocidade ela fica.</p>
+    </fieldset>
+
+    <fieldset id="events-box">
+      <legend>Provas e testes no período</legend>
+      <label class="check" for="pace-tests"><input type="checkbox" id="pace-tests"> <span>Incluir testes de nivelamento de 5 km (a cada ~6 semanas, nas semanas de recuperação)</span></label>
+      <div class="event-list" id="event-list"></div>
+      <button type="button" class="ghost" id="add-event">+ Adicionar prova ou teste</button>
+      <datalist id="ev-km-options"><option value="2"><option value="3"><option value="5"><option value="10"><option value="15"><option value="21,1"><option value="42,2"></datalist>
+      <p class="hint">A prova entra no dia do longão (ou na data informada), no lugar dele. O teste entra no lugar de uma corrida. Com o tempo informado, o plano mostra em que nível o resultado cai.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Preferências de treino</legend>
+      <div class="pref">
+        <span class="pref-label" id="lbl-volume">Volume</span>
+        <div class="seg compact" role="radiogroup" aria-labelledby="lbl-volume">
+          <input type="radio" name="volume" id="vol-menor" value="menor"><label for="vol-menor">Menor</label>
+          <input type="radio" name="volume" id="vol-padrao" value="padrao" checked><label for="vol-padrao">Padrão</label>
+          <input type="radio" name="volume" id="vol-maior" value="maior"><label for="vol-maior">Maior</label>
+        </div>
+      </div>
+      <div class="pref">
+        <span class="pref-label" id="lbl-difficulty">Dificuldade dos treinos fortes</span>
+        <div class="seg compact" role="radiogroup" aria-labelledby="lbl-difficulty">
+          <input type="radio" name="difficulty" id="dif-confortavel" value="confortavel"><label for="dif-confortavel">Confortável</label>
+          <input type="radio" name="difficulty" id="dif-equilibrado" value="equilibrado" checked><label for="dif-equilibrado">Equilibrado</label>
+          <input type="radio" name="difficulty" id="dif-desafiador" value="desafiador"><label for="dif-desafiador">Desafiador</label>
+        </div>
+      </div>
+      <div class="pref">
+        <span class="pref-label" id="lbl-focus">Foco</span>
+        <div class="seg compact" role="radiogroup" aria-labelledby="lbl-focus">
+          <input type="radio" name="focus" id="foc-resistencia" value="resistencia"><label for="foc-resistencia">Resistência</label>
+          <input type="radio" name="focus" id="foc-equilibrado" value="equilibrado" checked><label for="foc-equilibrado">Equilibrado</label>
+          <input type="radio" name="focus" id="foc-velocidade" value="velocidade"><label for="foc-velocidade">Velocidade</label>
+        </div>
+      </div>
+      <div class="field">
+        <label for="long-cap">Duração máxima do longão</label>
+        <select id="long-cap">
+          <option value="">Sem limite</option>
+          <option value="60">1h</option>
+          <option value="75">1h15</option>
+          <option value="90">1h30</option>
+          <option value="105">1h45</option>
+          <option value="120">2h</option>
+          <option value="150">2h30</option>
+          <option value="180">3h</option>
+          <option value="210">3h30</option>
+        </select>
+      </div>
+      <p class="hint">A planilha não tem regra para estas preferências. Elas ficam registradas, mas o volume segue a linha da planilha. A duração máxima só gera um alerta quando o longão passa dela.</p>
+    </fieldset>
+
+    <details class="more">
+      <summary>Mais opções</summary>
+      <div>
+        <div class="row">
+          <div class="field">
+            <label for="level">Nível</label>
+            <select id="level">
+              <option value="auto">Automático</option>
+              <option value="principiante">Principiante</option>
+              <option value="iniciante">Iniciante</option>
+              <option value="intermediario">Intermediário</option>
+              <option value="avancado">Avançado</option>
+              <option value="elite">Elite</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="age">Idade</label>
+            <input type="number" id="age" min="10" max="100" step="1" inputmode="numeric">
+          </div>
+        </div>
+        <p class="hint">Automático: pela velocidade da prova recente; sem ela, pelo volume atual.</p>
+      </div>
+    </details>
+
+    <p class="error" id="form-error" role="alert" hidden></p>
+    <button class="primary" type="submit" id="submit">Gerar plano</button>
+  </form>
+
+  <main id="result" aria-live="polite">
+    <p class="example-note" id="example-note">Exemplo: 10 km em 16 semanas para quem corre 30 km/semana, tem um longão de 9 km e fez 5 km em 25:00. Altere os dados no formulário e clique em <strong>Gerar plano</strong>.</p>
+    <div id="plan"></div>
+  </main>
+</div>
+
+<script src="volume_engine.js"></script>
+<script>
+(function () {
+  "use strict";
+  var VE = window.VolumeEngine;
+  var DAYS = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"];
+  var DAYS_SHORT = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+  var PHASES = {
+    progressao: { label: "Progressão", color: "var(--p1)" },
+    regra: { label: "Volume da regra", color: "var(--p3)" },
+    polimento: { label: "Polimento", color: "var(--p4)" }
+  };
+  var TYPE_LABEL = { longao: "Longão", corrida: "Corrida", forca: "Força", prova: "Prova", teste: "Teste", descanso: "" };
+  var STORAGE_KEY = "ef-volume:form";
+  var form = document.getElementById("plan-form");
+  var errorBox = document.getElementById("form-error");
+  var planEl = document.getElementById("plan");
+  var exampleNote = document.getElementById("example-note");
+  var lastPlan = null;
+
+  function $(id) { return document.getElementById(id); }
+  function esc(v) {
+    return String(v == null ? "" : v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  function km(v) { return (Math.round(Number(v) * 10) / 10).toFixed(1).replace(".", ","); }
+  function dec(v) { return String(v).replace(".", ","); }
+  function pct(v) { return Math.round(v * 100) + "%"; }
+  function radio(name) { var el = form.querySelector('input[name="' + name + '"]:checked'); return el ? el.value : ""; }
+  function fmtDate(iso, year) { if (!iso) return ""; var p = iso.split("-"); return p[2] + "/" + p[1] + (year ? "/" + p[0] : ""); }
+  function dayList(days) {
+    var n = days.map(function (d) { return DAYS_SHORT[d]; });
+    return n.length > 1 ? n.slice(0, -1).join(", ") + " e " + n[n.length - 1] : n.join("");
+  }
+
+  // ---------- Formulário ----------
+  var FIELD_IDS = ["weeks", "race-date", "weekly-km", "longest-run", "long-day", "long-cap",
+                   "recent-distance", "recent-time", "goal-time", "level", "age", "elevation"];
+
+  function checkedDays() {
+    return Array.prototype.map.call(form.querySelectorAll('input[name="run-day"]:checked'), function (el) { return Number(el.value); });
+  }
+  function readForm() {
+    var byDate = radio("deadline") === "date";
+    return {
+      distance: radio("distance"), terrain: radio("terrain"), surface: radio("surface"),
+      elevation_gain_m: $("elevation").value.trim(),
+      weeks: byDate ? "" : $("weeks").value, race_date: byDate ? $("race-date").value : "",
+      weekly_km: $("weekly-km").value, longest_run_km: $("longest-run").value,
+      run_days: checkedDays().join(","), long_run_day: $("long-day").value,
+      recent_distance: $("recent-distance").value, recent_time: $("recent-time").value.trim(),
+      goal_time: $("goal-time").value.trim(),
+      volume: radio("volume"), difficulty: radio("difficulty"), focus: radio("focus"),
+      long_run_max_min: $("long-cap").value, level: $("level").value, age: $("age").value,
+      pace_tests: $("pace-tests").checked ? "1" : "", events: readEvents()
+    };
+  }
+
+  // Provas e testes no período
+  var eventList = $("event-list"), eventSeq = 0;
+  function eventRows() { return Array.prototype.slice.call(eventList.querySelectorAll(".event")); }
+  function rowValues(row) {
+    return { kind: row.querySelector(".ev-kind").value, when: row.querySelector(".ev-when").value.trim(),
+             km: row.querySelector(".ev-km").value.trim(), time: row.querySelector(".ev-time").value.trim() };
+  }
+  function readEvents() {
+    var byDate = radio("deadline") === "date";
+    return eventRows().map(rowValues).filter(function (v) { return v.when || v.km || v.time; }).map(function (v) {
+      var ev = { kind: v.kind, distance_km: v.km, time: v.time };
+      if (byDate) ev.date = v.when; else ev.week = v.when;
+      return ev;
+    });
+  }
+  function addEventRow(values) {
+    values = values || {};
+    var byDate = radio("deadline") === "date", n = ++eventSeq;
+    var row = document.createElement("div");
+    row.className = "event";
+    row.innerHTML =
+      '<div class="row">' +
+        '<div class="field"><label for="ev-kind-' + n + '">Tipo</label><select id="ev-kind-' + n + '" class="ev-kind">' +
+          '<option value="prova">Prova</option><option value="teste">Teste de nivelamento</option></select></div>' +
+        '<div class="field"><label for="ev-when-' + n + '">' + (byDate ? "Data" : "Semana do plano") + "</label>" +
+          (byDate ? '<input id="ev-when-' + n + '" class="ev-when" type="date">'
+                  : '<input id="ev-when-' + n + '" class="ev-when" type="number" min="1" max="52" step="1" inputmode="numeric">') +
+        "</div></div>" +
+      '<div class="row">' +
+        '<div class="field"><label for="ev-km-' + n + '">Distância (km)</label><input id="ev-km-' + n + '" class="ev-km" type="text" inputmode="decimal" list="ev-km-options" placeholder="5" autocomplete="off"></div>' +
+        '<div class="field"><label for="ev-time-' + n + '">Tempo (se já fez)</label><input id="ev-time-' + n + '" class="ev-time" type="text" inputmode="numeric" pattern="[0-9:]*" maxlength="8" placeholder="25:00" autocomplete="off"></div>' +
+      "</div>" +
+      '<button type="button" class="ev-remove">Remover</button>';
+    row.querySelector(".ev-kind").value = values.kind === "teste" ? "teste" : "prova";
+    row.querySelector(".ev-when").value = values.when || "";
+    row.querySelector(".ev-km").value = values.km || "";
+    row.querySelector(".ev-time").value = values.time || "";
+    var time = row.querySelector(".ev-time");
+    time.addEventListener("input", function () { maskTime(time); });
+    row.querySelector(".ev-remove").addEventListener("click", function () { row.remove(); });
+    eventList.appendChild(row);
+    return row;
+  }
+  function syncEventRows() {
+    var rows = eventRows().map(rowValues);
+    eventList.innerHTML = "";
+    rows.forEach(function (v) { v.when = ""; addEventRow(v); });
+  }
+  $("add-event").addEventListener("click", function () { addEventRow().querySelector(".ev-when").focus(); });
+
+  function saveForm() {
+    try {
+      var state = { radios: {}, fields: {}, weeksTouched: weeksTouched };
+      ["distance", "deadline", "volume", "difficulty", "focus", "terrain", "surface"].forEach(function (n) { state.radios[n] = radio(n); });
+      state.runDays = checkedDays();
+      state.paceTests = $("pace-tests").checked;
+      state.events = eventRows().map(rowValues);
+      FIELD_IDS.forEach(function (id) { state.fields[id] = $(id).value; });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (e) { /* armazenamento indisponível: segue sem lembrar */ }
+  }
+  function restoreForm() {
+    try {
+      var state = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+      if (!state) return false;
+      Object.keys(state.radios || {}).forEach(function (n) {
+        var el = form.querySelector('input[name="' + n + '"][value="' + state.radios[n] + '"]');
+        if (el) el.checked = true;
+      });
+      if (Array.isArray(state.runDays)) {
+        form.querySelectorAll('input[name="run-day"]').forEach(function (el) { el.checked = state.runDays.indexOf(Number(el.value)) >= 0; });
+      }
+      syncDays();
+      Object.keys(state.fields || {}).forEach(function (id) { if ($(id)) $(id).value = state.fields[id]; });
+      $("pace-tests").checked = !!state.paceTests;
+      weeksTouched = !!state.weeksTouched;
+      syncDeadline();
+      eventList.innerHTML = "";
+      (state.events || []).forEach(function (v) { addEventRow(v); });
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function syncDeadline() {
+    var byDate = radio("deadline") === "date";
+    $("weeks-field").hidden = byDate;
+    $("date-field").hidden = !byDate;
+    if (byDate && !$("race-date").value) {
+      var d = new Date(); d.setDate(d.getDate() + 7 * 16);
+      d.setDate(d.getDate() + ((7 - d.getDay()) % 7));
+      $("race-date").value = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    }
+  }
+
+  // O longão só pode cair num dos dias marcados.
+  function syncDays() {
+    var days = checkedDays(), select = $("long-day"), current = select.value;
+    select.innerHTML = '<option value="">Automático</option>' + days.map(function (d) {
+      return '<option value="' + d + '">' + DAYS[d] + "</option>";
+    }).join("");
+    select.value = current !== "" && days.indexOf(Number(current)) >= 0 ? current : "";
+  }
+
+  // A duração acompanha a planilha (16 ou 20 semanas) até a pessoa mudar o número.
+  var weeksTouched = false;
+  $("weeks").addEventListener("input", function () { weeksTouched = true; });
+
+  // Dicas ao vivo: nível, linha da planilha, semanas e corridas pedidas.
+  function syncHints() {
+    var levelHint = $("level-hint"), weeksHint = $("weeks-hint"), daysHint = $("days-hint");
+    var c;
+    try { c = VE.classify(readForm()); } catch (e) {
+      levelHint.textContent = e instanceof VE.PlanError ? e.message : "";
+      return;
+    }
+    var R = c.rule, L = VE.LEVEL_LABEL[c.level].toLowerCase();
+    if (c.speed_kmh != null) {
+      levelHint.innerHTML = "<b>" + dec((Math.round(c.speed_kmh * 10) / 10).toFixed(1)) + " km/h</b> → nível <b>" + esc(VE.LEVEL_LABEL[c.speed_level].toLowerCase()) +
+        "</b> (" + esc(VE.rule(c.distance, c.speed_level).speed_range) + ")" + (c.source === "manual" ? ". Nível escolhido em Mais opções: " + esc(L) + "." : ".");
+    } else {
+      levelHint.innerHTML = (c.source === "manual" ? "Nível escolhido: <b>" + esc(L) + "</b>." :
+        "Sem prova recente: nível <b>" + esc(L) + "</b> pelo volume atual.") + " A velocidade de uma prova define o nível pela planilha.";
+    }
+    if (!weeksTouched && radio("deadline") === "weeks") $("weeks").value = R.weeks;
+    weeksHint.innerHTML = "Planilha para " + esc(VE.SHEET_DISTANCE[c.distance]) + ", " + esc(L) + ": <b>" + R.weeks + " semanas</b>, mínimo <b>" + R.min_weeks + "</b>.";
+    var n = checkedDays().length;
+    daysHint.classList.toggle("alert", n < R.runs);
+    daysHint.classList.toggle("live", n >= R.runs);
+    daysHint.innerHTML = n < R.runs
+      ? "A planilha pede " + R.runs + " corridas por semana neste nível. Marque pelo menos " + R.runs + " dias (" + n + (n === 1 ? " marcado)." : " marcados).")
+      : "A planilha pede <b>" + R.runs + " corridas</b> e <b>" + R.strength + " treinos de força</b> por semana." +
+        (n > R.runs ? " Dos " + n + " dias marcados, o plano usa os " + R.runs + " mais espaçados." : "");
+  }
+
+  // Tempos: os dois-pontos entram sozinhos (o teclado numérico do celular não tem ":").
+  function formatTimeDigits(digits) {
+    if (digits.length <= 2) return digits;
+    if (digits.length <= 4) return digits.slice(0, -2) + ":" + digits.slice(-2);
+    return digits.slice(0, -4) + ":" + digits.slice(-4, -2) + ":" + digits.slice(-2);
+  }
+  function maskTime(el) {
+    var caret = el.selectionStart == null ? el.value.length : el.selectionStart;
+    var before = el.value.slice(0, caret).replace(/\D/g, "").length;
+    var formatted = formatTimeDigits(el.value.replace(/\D/g, "").slice(0, 6));
+    if (formatted === el.value) return;
+    el.value = formatted;
+    var pos = 0, seen = 0;
+    while (pos < formatted.length && seen < before) { if (/\d/.test(formatted[pos])) seen++; pos++; }
+    try { el.setSelectionRange(pos, pos); } catch (e) { /* campo sem seleção */ }
+  }
+  form.querySelectorAll(".time-input").forEach(function (el) { el.addEventListener("input", function () { maskTime(el); }); });
+
+  form.addEventListener("change", function (e) {
+    if (e.target.name === "deadline") { syncDeadline(); syncEventRows(); }
+    if (e.target.name === "run-day") syncDays();
+    syncHints();
+  });
+  form.addEventListener("input", syncHints);
+  form.addEventListener("submit", function (e) { e.preventDefault(); generate(false); });
+
+  function showError(message) { errorBox.textContent = message; errorBox.hidden = !message; }
+
+  function generate(isExample) {
+    showError("");
+    var plan;
+    try { plan = VE.planFromPayload(readForm()); } catch (e) {
+      if (!(e instanceof VE.PlanError)) console.error(e);
+      showError(e instanceof VE.PlanError ? e.message : "Não foi possível gerar o plano com esses dados.");
+      return;
+    }
+    exampleNote.hidden = isExample !== true;
+    if (!isExample) saveForm();
+    renderPlan(plan);
+    if (!isExample && window.matchMedia("(max-width: 900px)").matches) $("result").scrollIntoView({ behavior: "smooth" });
+  }
+
+  // ---------- Renderização ----------
+  function renderPlan(plan) {
+    lastPlan = plan;
+    var html = summaryHtml(plan) + alertsHtml(plan) + ruleHtml(plan) + gatesHtml(plan) + chartBlockHtml(plan) +
+      reasonsHtml(plan) + eventsHtml(plan) + weeksHtml(plan) + rulesHtml(plan) + sheetHtml(plan) + footHtml(plan);
+    planEl.innerHTML = html;
+    drawChart(plan);
+    bindActions();
+  }
+
+  function summaryHtml(p) {
+    var R = p.rule;
+    var src = { velocidade: "pela velocidade", manual: "escolhido no formulário", volume: "pelo volume atual" }[p.level_source];
+    var proj = p.reached_week ? "alcançada na semana " + p.reached_week : "pico do plano " + km(p.peak_km) + " km";
+    return '<section class="panel summary">' +
+      '<div class="bib"><span class="pins"></span>' +
+        '<div class="race">' + esc(p.distance_label) + " · " + fmtDate(p.race_date, true) + "</div>" +
+        '<div class="time">' + km(R.weekly_km) + "<small>km</small></div>" +
+        '<div class="pace">por semana · linha ' + R.line + " da planilha</div>" +
+        '<div class="proj">' + esc(proj) + "</div>" +
+      "</div>" +
+      '<dl class="facts">' +
+        "<div><dt>Nível</dt><dd>" + esc(p.level_label) + "<small>" + esc(src) + "</small></dd></div>" +
+        "<div><dt>Velocidade de nivelamento</dt><dd>" + (p.speed_kmh != null ? dec((Math.round(p.speed_kmh * 10) / 10).toFixed(1)) + " km/h<small>" + esc(p.speed_text) + "</small>" : "—<small>sem prova recente</small>") + "</dd></div>" +
+        "<div><dt>Duração</dt><dd>" + p.weeks_count + " semanas<small>início " + fmtDate(p.start_date) + " · padrão " + R.weeks + ", mínimo " + R.min_weeks + "</small></dd></div>" +
+        "<div><dt>Corridas</dt><dd>" + R.runs + " por semana<small>" + esc(dayList(p.run_days)) + "</small></dd></div>" +
+        "<div><dt>Exercício resistido</dt><dd>" + R.strength + " por semana<small>" + esc(dayList(p.strength_days)) + "</small></dd></div>" +
+        "<div><dt>Longão</dt><dd>" + km(R.long_km) + " km<small>" + pct(R.long_pct) + " · demais corridas " + km(R.avg_km) + " km</small></dd></div>" +
+      "</dl></section>";
+  }
+
+  function alertsHtml(p) {
+    if (!p.warnings.length) return "";
+    return '<ul class="alerts" aria-label="Alertas">' + p.warnings.map(function (w) {
+      var action = w.code === "prereq" ? '<button type="button" class="ghost" data-goto="' + esc(p.prereq.from) + '">Gerar plano de ' +
+        esc(VE.SHEET_DISTANCE[p.prereq.from]) + "</button>" : "";
+      return '<li class="' + esc(w.level) + '"><span>' + esc(w.text) + "</span>" + action + "</li>";
+    }).join("") + "</ul>";
+  }
+
+  function ruleHtml(p) {
+    var R = p.rule, ln = R.line;
+    function cell(col, name, value, formula) {
+      return '<div class="cell"><div class="ref"><b>' + col + ln + "</b><span>" + name + '</span></div><div class="v">' + km(value) +
+        '<small>km</small></div><div class="f">' + formula + "</div></div>";
+    }
+    return '<section class="panel section"><div class="section-head"><h2>Linha ' + ln + " da planilha</h2>" +
+      "<p>" + esc(VE.SHEET_DISTANCE[p.distance]) + " · " + esc(p.level_label.toLowerCase()) + " · velocidade " + esc(R.speed_range) + "</p></div>" +
+      '<div class="cells">' +
+        cell("H", "distância semanal", R.weekly_km, esc(R.weekly_formula)) +
+        cell("I", "longão", R.long_km, "<code>H" + ln + " × " + dec(R.long_pct) + "</code>") +
+        cell("J", "VSDL", R.vsdl_km, "<code>H" + ln + " − I" + ln + "</code> · volume sem o longão") +
+        cell("K", "média VSDL", R.avg_km, "<code>J" + ln + " ÷ (F" + ln + " − 1)</code> · cada uma das outras " + (R.runs - 1) + " corridas") +
+      "</div>" +
+      '<p class="rowmeta"><span>F' + ln + " · corridas <b>" + R.runs + "</b></span><span>G" + ln + " · exercício resistido <b>" + R.strength +
+        "</b></span><span>D" + ln + " · semanas <b>" + R.weeks + "</b></span><span>E" + ln + " · tempo mínimo <b>" + R.min_weeks + " semanas</b></span></p>" +
+      "</section>";
+  }
+
+  function checkLi(ok, text, sub) {
+    return '<li class="' + (ok ? "ok" : "no") + '"><span class="mark" aria-label="' + (ok ? "atende" : "não atende") + '">' + (ok ? "✓" : "✗") +
+      "</span><span>" + text + (sub ? "<small>" + sub + "</small>" : "") + "</span></li>";
+  }
+  function gatesHtml(p) {
+    var a, b;
+    if (p.prereq) {
+      var s = p.prereq;
+      a = '<div class="gate"><div class="gate-head"><h3><span class="k">Para entrar</span>' + esc(VE.SHEET_DISTANCE[p.distance]) + '</h3><span class="status ' + (s.met ? "ok" : "no") + '">' +
+        (s.met ? "Atendido" : "Não atendido") + "</span></div>" +
+        '<ul class="checks">' + checkLi(s.km_ok, "Rodagem de " + s.km + " km/semana ou mais", "você: " + km(s.weekly_km) + " km") +
+        checkLi(s.long_ok, s.mode === "proximo" ? "Longão próximo a " + dec(s.long_km) + " km" : "Longão maior que " + dec(s.long_km) + " km",
+          "você: " + km(s.longest_km) + " km" + (s.mode === "proximo" ? " · aceito a partir de " + km(s.long_min_km) + " km" : "")) + "</ul>" +
+        '<p class="quote">Linha ' + s.line + ": “Pré-requisito para ir para a próxima fase: " + esc(s.text) + ".”</p></div>";
+    } else {
+      a = '<div class="gate"><div class="gate-head"><h3><span class="k">Para entrar</span>5 km</h3><span class="status na">Sem requisito</span></div>' +
+        '<p class="quote">O 5 km é a primeira fase da planilha.</p></div>';
+    }
+    if (p.next_phase) {
+      var n = p.next_phase;
+      b = '<div class="gate"><div class="gate-head"><h3><span class="k">Ao fim do plano · próxima fase</span>' + esc(VE.SHEET_DISTANCE[n.distance]) + '</h3><span class="status ' + (n.met ? "ok" : "no") + '">' +
+        (n.met ? "Pronto" : "Ainda não") + "</span></div>" +
+        '<ul class="checks">' + checkLi(n.km_ok, "Rodagem de " + n.km + " km/semana ou mais", "pico do plano: " + km(n.weekly_km) + " km") +
+        checkLi(n.long_ok, n.mode === "proximo" ? "Longão próximo a " + dec(n.long_km) + " km" : "Longão maior que " + dec(n.long_km) + " km",
+          "maior longão no pico: " + km(n.longest_km) + " km") + "</ul>" +
+        '<p class="quote">Compara o pico deste plano com o pré-requisito da linha ' + n.line + ".</p></div>";
+    } else {
+      b = '<div class="gate"><div class="gate-head"><h3><span class="k">Próxima fase</span>Ultramaratona</h3><span class="status na">Última fase</span></div>' +
+        '<p class="quote">A ultramaratona é a última fase da planilha.</p></div>';
+    }
+    return '<section class="panel section"><div class="section-head"><h2>Pré-requisitos</h2><p>Cada distância exige uma rodagem semanal e um longão mínimos.</p></div>' +
+      '<div class="gates">' + a + b + "</div></section>";
+  }
+
+  function chartBlockHtml(p) {
+    var legend = Object.keys(PHASES).filter(function (k) { return p.weeks.some(function (w) { return w.phase === k; }); }).map(function (k) {
+      return '<li><span class="swatch" style="background:' + PHASES[k].color + '"></span>' + PHASES[k].label + "</li>";
+    }).join("");
+    legend += '<li><span class="swatch" style="background:var(--faint);opacity:.45"></span>Recuperação (barra clara)</li>';
+    legend += '<li><span class="swatch line"></span>Distância semanal da regra</li>';
+    return '<section class="panel section"><div class="section-head"><h2>Volume semanal</h2><span class="hint">Toque numa barra para abrir a semana</span></div>' +
+      '<ul class="legend">' + legend + '</ul><div class="chart-wrap" id="chart"></div></section>';
+  }
+
+  // Escala com passos redondos (5, 10, 20, 25 ou 50 km) e no máximo 5 divisões.
+  function niceScale(v) {
+    var steps = [2, 5, 10, 20, 25, 50];
+    for (var i = 0; i < steps.length; i++) if (v / steps[i] <= 5) return { step: steps[i], max: Math.ceil(v / steps[i]) * steps[i] };
+    return { step: 50, max: Math.ceil(v / 50) * 50 };
+  }
+  function drawChart(p) {
+    var wrap = $("chart"), weeks = p.weeks, H = p.rule.weekly_km;
+    var W = 760, Ht = 250, padL = 40, padR = 70, padT = 22, padB = 28;
+    var scale = niceScale(Math.max(H, Math.max.apply(null, weeks.map(function (w) { return w.total_km; }))) * 1.08), maxV = scale.max;
+    var plotW = W - padL - padR, plotH = Ht - padT - padB, slot = plotW / weeks.length;
+    var gap = Math.max(2, Math.min(8, slot * 0.18)), barW = slot - gap;
+    function y(v) { return padT + plotH - (v / maxV) * plotH; }
+    var svg = '<svg viewBox="0 0 ' + W + " " + Ht + '" role="img" aria-label="Volume de cada semana em km, com a distância semanal da regra">';
+    for (var v = 0; v <= maxV + 1e-9; v += scale.step) {
+      var yy = y(v);
+      svg += '<line x1="' + padL + '" x2="' + (W - padR) + '" y1="' + yy + '" y2="' + yy + '" stroke="var(--line)" stroke-width="1"/>';
+      svg += '<text x="' + (padL - 6) + '" y="' + (yy + 4) + '" text-anchor="end" font-size="11" fill="var(--faint)">' + Math.round(v) + "</text>";
+    }
+    svg += '<text x="' + (padL - 6) + '" y="' + (padT - 8) + '" text-anchor="end" font-size="11" fill="var(--faint)">km</text>';
+    var labelEvery = weeks.length > 26 ? 4 : weeks.length > 14 ? 2 : 1;
+    weeks.forEach(function (w, i) {
+      var x = padL + i * slot + gap / 2, top = y(w.total_km), h = padT + plotH - top, r = Math.min(4, barW / 2, h);
+      var path = "M" + x + "," + (padT + plotH) + " V" + (top + r) + " Q" + x + "," + top + " " + (x + r) + "," + top +
+        " H" + (x + barW - r) + " Q" + (x + barW) + "," + top + " " + (x + barW) + "," + (top + r) + " V" + (padT + plotH) + " Z";
+      var ph = PHASES[w.phase];
+      var tip = "Semana " + w.number + " · " + ph.label + (w.is_cutback ? " (recuperação)" : "") + " · " + km(w.total_km) + " km";
+      svg += '<g class="bar" tabindex="0" role="button" data-week="' + w.number + '" data-tip="' + esc(tip) + '" data-x="' + (x + barW / 2) + '" data-y="' + top + '">' +
+        '<rect x="' + (padL + i * slot) + '" y="' + padT + '" width="' + slot + '" height="' + plotH + '" fill="transparent"/>' +
+        '<path d="' + path + '" fill="' + ph.color + '"' + (w.is_cutback ? ' fill-opacity="0.45"' : "") + "/></g>";
+      if ((i + 1) % labelEvery === 0 || i === 0 || i === weeks.length - 1) {
+        svg += '<text x="' + (x + barW / 2) + '" y="' + (Ht - 10) + '" text-anchor="middle" font-size="11" fill="var(--muted)">' + w.number + "</text>";
+      }
+    });
+    var hy = y(H);
+    svg += '<line x1="' + padL + '" x2="' + (W - padR) + '" y1="' + hy + '" y2="' + hy + '" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="5 4"/>';
+    svg += '<text x="' + (W - padR + 6) + '" y="' + (hy - 3) + '" font-size="11" font-weight="600" fill="var(--ink)">regra</text>';
+    svg += '<text x="' + (W - padR + 6) + '" y="' + (hy + 11) + '" font-size="11" fill="var(--muted)">' + km(H) + " km</text>";
+    var last = weeks[weeks.length - 1], lx = padL + (weeks.length - 1) * slot + slot / 2;
+    svg += '<text x="' + lx + '" y="' + (y(last.total_km) - 6) + '" text-anchor="middle" font-size="11" fill="var(--muted)">prova</text>';
+    svg += "</svg>";
+    wrap.innerHTML = svg + '<div class="tooltip" hidden></div>';
+    var tooltip = wrap.querySelector(".tooltip"), svgEl = wrap.querySelector("svg");
+    function showTip(g) {
+      var sb = svgEl.getBoundingClientRect(), wb = wrap.getBoundingClientRect(), scale = sb.width / W;
+      tooltip.textContent = g.getAttribute("data-tip");
+      tooltip.hidden = false;
+      var half = tooltip.offsetWidth / 2, x = sb.left - wb.left + wrap.scrollLeft + Number(g.getAttribute("data-x")) * scale;
+      tooltip.style.left = Math.max(wrap.scrollLeft + half + 4, Math.min(wrap.scrollLeft + wrap.clientWidth - half - 4, x)) + "px";
+      tooltip.style.top = (sb.top - wb.top + Number(g.getAttribute("data-y")) * scale) + "px";
+    }
+    wrap.querySelectorAll(".bar").forEach(function (g) {
+      g.addEventListener("mouseenter", function () { showTip(g); });
+      g.addEventListener("focus", function () { showTip(g); });
+      g.addEventListener("mouseleave", function () { tooltip.hidden = true; });
+      g.addEventListener("blur", function () { tooltip.hidden = true; });
+      function open() { openWeek(Number(g.getAttribute("data-week"))); }
+      g.addEventListener("click", open);
+      g.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
+    });
+  }
+  function openWeek(n) {
+    var el = $("semana-" + n);
+    if (!el) return;
+    el.open = true;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function reasonsHtml(p) {
+    var extra = p.notes.length ? p.notes : [];
+    return '<section class="panel section"><details class="plan-why"><summary><h2>Como o plano foi montado</h2></summary>' +
+      '<ul class="why-list">' + p.reasons.concat(extra).map(function (r) { return "<li>" + esc(r) + "</li>"; }).join("") + "</ul></details></section>";
+  }
+
+  function eventsHtml(p) {
+    if (!p.events.length) return "";
+    return '<section class="panel section events-plan"><h2>Provas e testes</h2><ul>' + p.events.map(function (e) {
+      var what = (e.kind === "prova" ? "Prova de " : e.auto ? "Teste de nivelamento de " : "Teste de ") + dec(Math.round(e.distance_km * 10) / 10) + " km";
+      var when = "Semana " + e.week + " · " + DAYS_SHORT[e.day_of_week] + (e.date_iso ? " " + fmtDate(e.date_iso) : "");
+      var res = e.time ? "feito em " + e.time + " · " + dec((Math.round(e.speed_kmh * 10) / 10).toFixed(1)) + " km/h, nível " + VE.LEVEL_LABEL[e.speed_level].toLowerCase()
+                       : (e.auto ? "informe o tempo depois para ver o nível" : "sem tempo informado");
+      return '<li><span class="ev-what">' + esc(what) + '</span><span class="ev-meta">' + esc(when) + " · " + esc(res) + "</span></li>";
+    }).join("") + "</ul></section>";
+  }
+
+  function weeksHtml(p) {
+    var weeks = p.weeks.map(function (w, i) {
+      var ph = PHASES[w.phase];
+      var tags = '<span class="pill"><span class="swatch" style="background:' + ph.color + '"></span>' + ph.label + "</span>";
+      if (w.is_cutback) tags += '<span class="pill">Recuperação</span>';
+      if (w.is_race) tags += '<span class="pill">Prova</span>';
+      var focus = w.run_count + " corridas · " + w.strength_count + " de força" + (w.is_race ? "" : " · alvo " + km(w.target_km) + " km") + " · " + fmtDate(w.start_date);
+      return '<details class="week" id="semana-' + w.number + '"' + (i === 0 ? " open" : "") + "><summary>" +
+        '<span class="wk-num"><small>Semana</small>' + w.number + "</span>" +
+        '<span class="wk-mid"><span class="wk-tags">' + tags + '</span><span class="wk-focus">' + esc(focus) + "</span></span>" +
+        '<span class="wk-km">' + km(w.total_km) + " <small>km</small></span></summary>" +
+        '<ol class="days">' + w.days.map(dayHtml).join("") + "</ol>" +
+        '<details class="why"><summary>Por que esta semana?</summary><ul class="why-list">' +
+          w.reasons.map(function (r) { return "<li>" + esc(r.text) + "</li>"; }).join("") + "</ul></details></details>";
+    }).join("");
+    return '<section class="panel section"><div class="section-head"><h2>Semana a semana</h2><div class="actions">' +
+      '<button type="button" class="ghost" data-action="expand">Abrir todas</button>' +
+      '<button type="button" class="ghost" data-action="collapse">Fechar todas</button>' +
+      '<button type="button" class="ghost" data-action="copy">Copiar plano</button></div></div>' +
+      '<div class="copy-box" id="copy-box" hidden><p class="hint">Selecione o texto abaixo e copie (Markdown):</p><textarea id="copy-text" readonly rows="8"></textarea></div>' +
+      '<div class="weeks">' + weeks + "</div></section>";
+  }
+
+  function dayHtml(d) {
+    var rest = d.items.length === 1 && d.items[0].type === "descanso";
+    var total = d.items.reduce(function (s, x) { return s + (x.km || 0); }, 0);
+    var items = d.items.map(function (x) {
+      var tag = TYPE_LABEL[x.type] && x.type !== "corrida" ? '<span class="tag ' + x.type + '">' + TYPE_LABEL[x.type] + "</span>" : "";
+      var title = x.type === "longao" || x.type === "corrida" ? x.title + " " + km(x.km) + " km" : x.title;
+      return '<div class="day-title">' + esc(title) + " " + tag + (x.note ? '<span class="note">' + esc(x.note) + "</span>" : "") + "</div>";
+    }).join("");
+    return '<li class="day' + (rest ? " rest" : "") + '" aria-label="' + DAYS[d.day] + '"><span class="day-name">' + DAYS_SHORT[d.day] +
+      "<small>" + fmtDate(d.date) + '</small></span><div class="day-items">' + items + '</div><span class="day-km">' + (total ? km(total) : "—") + "</span></li>";
+  }
+
+  function rulesHtml() {
+    var r = VE.describeRules();
+    function list(rows) { return "<dl>" + rows.map(function (x) { return "<dt>" + esc(x[0]) + "</dt><dd>" + esc(x[1]) + "</dd>"; }).join("") + "</dl>"; }
+    return '<section class="panel section"><div class="section-head"><h2>Regras usadas</h2>' +
+      "<p>A planilha define o volume de cada nível. A evolução semana a semana não está nela: os complementos à direita preenchem isso e podem ser trocados.</p></div>" +
+      '<div class="rules"><div><h3><span class="src">.xlsx</span>Da planilha</h3>' + list(r.planilha) + "</div>" +
+      '<div><h3><span class="src add">+</span>Complementos da engine</h3>' + list(r.complemento) + "</div></div></section>";
+  }
+
+  function sheetHtml(p) {
+    var lastDist = null;
+    var rows = VE.sheetTable().map(function (r) {
+      var cur = r.distance === p.distance && r.level === p.level, group = lastDist !== null && lastDist !== r.distance;
+      lastDist = r.distance;
+      return '<tr class="' + (cur ? "current" : "") + (group ? " group" : "") + '"><td class="ln">' + r.line + "</td><td>" + esc(VE.SHEET_DISTANCE[r.distance]) + "</td><td>" +
+        esc(VE.LEVEL_LABEL[r.level]) + "</td><td>" + esc(r.speed_range) + "</td><td>" + r.weeks + " (" + r.min_weeks + ")</td><td>" + r.runs + "</td><td>" + r.strength +
+        "</td><td>" + km(r.weekly_km) + "</td><td>" + pct(r.long_pct) + " · " + km(r.long_km) + "</td><td>" + km(r.vsdl_km) + "</td><td>" + km(r.avg_km) + "</td></tr>";
+    }).join("");
+    return '<section class="panel section"><details class="sheet"><summary><h2>Tabela da planilha</h2></summary>' +
+      '<p class="lead" style="margin-top:8px">As 25 linhas com as fórmulas calculadas. A linha usada neste plano está destacada.</p>' +
+      '<div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>Linha</th><th>Distância</th><th>Nível</th><th>Velocidade</th><th>Semanas (mín.)</th>' +
+      "<th>Corridas</th><th>Força</th><th>Km/semana</th><th>Longão</th><th>VSDL</th><th>Média VSDL</th></tr></thead><tbody>" + rows + "</tbody>" +
+      "<caption>Na planilha, a ultra principiante parte do 42 km iniciante (H26 = H21), como está na célula.</caption></table></div></details></section>";
+  }
+
+  function footHtml(p) {
+    return '<section class="panel section"><h2>Entradas sem regra na planilha</h2>' +
+      '<p class="lead">Estes campos são os mesmos da Endurance Forge, mas a planilha não diz como usá-los. Eles não mudam o volume.</p>' +
+      '<div class="chips">' + p.unused_inputs.map(function (u) { return '<span class="chip">' + esc(u) + "</span>"; }).join("") + "</div>" +
+      '<p class="disclaimer">Este plano é uma orientação geral e não substitui avaliação médica nem o acompanhamento de um treinador. Engine de controle de volume ' + esc(p.version) + ".</p></section>";
+  }
+
+  function copyPlan(btn) {
+    var text = lastPlan.markdown;
+    function done() { btn.textContent = "Copiado"; setTimeout(function () { btn.textContent = "Copiar plano"; }, 2000); }
+    function fallback() { var box = $("copy-box"), area = $("copy-text"); area.value = text; box.hidden = false; area.focus(); area.select(); }
+    try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
+  }
+  function bindActions() {
+    planEl.querySelectorAll("[data-action]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var a = btn.getAttribute("data-action"), all = planEl.querySelectorAll("details.week");
+        if (a === "expand") all.forEach(function (d) { d.open = true; });
+        if (a === "collapse") all.forEach(function (d) { d.open = false; });
+        if (a === "copy") copyPlan(btn);
+      });
+    });
+    planEl.querySelectorAll("[data-goto]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var el = form.querySelector('input[name="distance"][value="' + btn.getAttribute("data-goto") + '"]');
+        if (!el) return;
+        el.checked = true;
+        syncHints();
+        generate(false);
+        $("result").scrollIntoView({ behavior: "smooth" });
+      });
+    });
+  }
+
+  // ---------- Início ----------
+  syncDays();
+  var restored = restoreForm();
+  syncDeadline();
+  syncHints();
+  generate(!restored);
+})();
+</script>
