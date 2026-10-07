@@ -34,6 +34,11 @@
   --p4: #eda100;
   --gym: #5a49b8;
   --gym-soft: #ebe8fb;
+  --s-cl: #0f1b2d;
+  --s-cm: #2f8f9d;
+  --s-cf: #e0682f;
+  --s-ti: #c42b55;
+  --s-lv: #9aa7b8;
   --cell: #f3f6f2;
   --cell-head: #e2e8df;
   --bib: #ffffff;
@@ -51,6 +56,7 @@
     --warn-ink: #f5c77e; --warn-bg: #2d2412; --warn-line: #5c4518; --error-ink: #ffb3b3; --error-bg: #3a1a1a; --error-line: #6a2c2c;
     --ok-ink: #7fd494; --ok-bg: #16301f; --info-ink: #b9c7de; --info-bg: #1a263a;
     --p1: #3987e5; --p3: #199e70; --p4: #c98500; --gym: #9d90ef; --gym-soft: #221d44;
+    --s-cl: #dce6f4; --s-cm: #3fb3c2; --s-cf: #f07d45; --s-ti: #ec5f83; --s-lv: #5f7088;
     --cell: #0f2033; --cell-head: #16304a; --bib: #e8f0fb; --bib-ink: #07111f; --shadow: none;
   }
 }
@@ -61,6 +67,7 @@
   --warn-ink: #f5c77e; --warn-bg: #2d2412; --warn-line: #5c4518; --error-ink: #ffb3b3; --error-bg: #3a1a1a; --error-line: #6a2c2c;
   --ok-ink: #7fd494; --ok-bg: #16301f; --info-ink: #b9c7de; --info-bg: #1a263a;
   --p1: #3987e5; --p3: #199e70; --p4: #c98500; --gym: #9d90ef; --gym-soft: #221d44;
+  --s-cl: #dce6f4; --s-cm: #3fb3c2; --s-cf: #f07d45; --s-ti: #ec5f83; --s-lv: #5f7088;
   --cell: #0f2033; --cell-head: #16304a; --bib: #e8f0fb; --bib-ink: #07111f; --shadow: none;
 }
 
@@ -112,6 +119,8 @@ input:hover, select:hover { border-color: var(--faint); }
   background: var(--surface-2); cursor: pointer; font-family: var(--display); font-weight: 600; font-size: 17px; line-height: 1.2; user-select: none;
 }
 .seg.compact label { font-size: 15px; padding: 7px 2px; }
+.seg label small { display: block; font-family: var(--body); font-weight: 400; font-size: 11.5px; color: var(--muted); letter-spacing: 0; }
+.seg input:checked + label small { color: inherit; opacity: .85; }
 .seg.week-days { flex-wrap: nowrap; gap: 4px; }
 .seg.week-days label { min-width: 0; padding: 8px 0; font-size: 15px; }
 .seg input:checked + label { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
@@ -191,6 +200,27 @@ main { display: grid; gap: 20px; min-width: 0; }
 .rowmeta { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14px; color: var(--muted); margin: 0; }
 .rowmeta b { color: var(--ink); font-weight: 600; }
 
+/* Divisão da semana */
+.mixbar { display: flex; height: 30px; border-radius: 6px; overflow: hidden; gap: 2px; background: var(--line); }
+.mixbar span { min-width: 0; display: flex; align-items: center; justify-content: center; font: 600 12px var(--body); color: var(--surface); white-space: nowrap; overflow: hidden; }
+.mixbar .longao { background: var(--s-cl); } .mixbar .cm { background: var(--s-cm); } .mixbar .cf { background: var(--s-cf); }
+.mixbar .tiros { background: var(--s-ti); } .mixbar .leve { background: var(--s-lv); }
+.mixbar .longao { color: var(--bg); }
+.mix-table { min-width: 560px; font-size: 14px; }
+.mix-table td, .mix-table th { white-space: normal; vertical-align: top; }
+.mix-table th:nth-child(-n+2), .mix-table td:nth-child(-n+2) { text-align: left; }
+.mix-table th:last-child, .mix-table td:last-child { text-align: left; }
+.mix-table td:first-child { font-weight: 600; white-space: nowrap; }
+.mix-table td:nth-child(3), .mix-table td:nth-child(4) { white-space: nowrap; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 7px; background: var(--c); vertical-align: -1px; }
+.caps { display: flex; flex-wrap: wrap; gap: 8px; }
+.cap { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; display: grid; gap: 2px; min-width: 150px; flex: 1 1 150px; background: var(--surface-2); }
+.cap .k { font: 500 12px var(--mono); color: var(--muted); }
+.cap .v { font-family: var(--display); font-weight: 700; font-size: 22px; line-height: 1.1; }
+.cap .v small { font-family: var(--body); font-weight: 400; font-size: 13px; color: var(--muted); }
+.cap .meter { height: 5px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.cap .meter i { display: block; height: 100%; background: var(--s-ti); }
+
 /* Pré-requisitos */
 .gates { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 @media (max-width: 700px) { .gates { grid-template-columns: minmax(0, 1fr); } }
@@ -248,7 +278,10 @@ details.week > summary::-webkit-details-marker { display: none; }
 .day-title { font-weight: 600; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .day-title .note { font-weight: 400; font-size: 13px; color: var(--muted); font-style: italic; }
 .tag { font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; padding: 1px 6px; border-radius: 4px; background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); }
-.tag.longao { background: var(--ink); color: var(--surface); border-color: transparent; }
+.tag.longao, .tag.cm, .tag.cf, .tag.tiros, .tag.leve { background: transparent; border-color: var(--c); color: var(--ink); border-left-width: 4px; }
+.tag.longao { --c: var(--s-cl); } .tag.cm { --c: var(--s-cm); } .tag.cf { --c: var(--s-cf); } .tag.tiros { --c: var(--s-ti); } .tag.leve { --c: var(--s-lv); }
+.parts { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 2px 12px; font-size: 13px; color: var(--muted); }
+.parts b { color: var(--ink); font-weight: 600; }
 .tag.forca { background: var(--gym-soft); color: var(--gym); border-color: transparent; }
 .tag.prova { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
 .tag.teste { background: var(--accent-soft); color: var(--accent-text); border-color: transparent; }
@@ -278,14 +311,14 @@ details.plan-why[open] > summary::after { content: " −"; }
 .events-plan .ev-meta { color: var(--muted); font-size: 13.5px; }
 
 /* Regras e tabela */
-.rules { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-@media (max-width: 760px) { .rules { grid-template-columns: minmax(0, 1fr); } }
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
 .rules h3 { font-size: 19px; display: flex; align-items: center; gap: 8px; }
 .rules dl { margin: 8px 0 0; display: grid; gap: 8px; }
 .rules dt { font-weight: 600; font-size: 14px; }
 .rules dd { margin: 0; color: var(--muted); font-size: 14px; }
 .src { font: 500 11px/1 var(--mono); padding: 3px 6px; border-radius: 4px; background: var(--cell-head); color: var(--ink); letter-spacing: 0; }
 .src.add { background: var(--warn-bg); color: var(--warn-ink); }
+.src.coach { background: var(--accent-soft); color: var(--accent-text); }
 .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
 table { border-collapse: collapse; width: 100%; min-width: 860px; font-size: 13.5px; }
 th, td { padding: 7px 9px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
@@ -382,6 +415,15 @@ details.sheet[open] > summary::after { content: " −"; }
         </div>
       </div>
       <p class="hint">Média das últimas 4 semanas. Os dois valores são conferidos com o pré-requisito da distância.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Periodização</legend>
+      <div class="seg" role="radiogroup" aria-label="Modelo de periodização">
+        <input type="radio" name="periodization" id="per-31" value="3:1" checked><label for="per-31">3:1<small>3 mantêm, 1 sobe</small></label>
+        <input type="radio" name="periodization" id="per-alt" value="alternado"><label for="per-alt">Alternado<small>sobe e regenera</small></label>
+      </div>
+      <p class="hint">3:1: três semanas mantendo o volume e uma de aumento, de até 30%. Alternado: acréscimo de até 10% intercalado com uma semana regenerativa; a cada dois pares o patamar sobe. Os dois param na distância semanal da planilha.</p>
     </fieldset>
 
     <fieldset>
@@ -511,7 +553,7 @@ details.sheet[open] > summary::after { content: " −"; }
   </form>
 
   <main id="result" aria-live="polite">
-    <p class="example-note" id="example-note">Exemplo: 10 km em 16 semanas para quem corre 30 km/semana, tem um longão de 9 km e fez 5 km em 25:00. Altere os dados no formulário e clique em <strong>Gerar plano</strong>.</p>
+    <p class="example-note" id="example-note">Exemplo: 10 km em 16 semanas, periodização 3:1, para quem corre 30 km/semana, tem um longão de 9 km e fez 5 km em 25:00. Altere os dados no formulário e clique em <strong>Gerar plano</strong>.</p>
     <div id="plan"></div>
   </main>
 </div>
@@ -528,7 +570,8 @@ details.sheet[open] > summary::after { content: " −"; }
     regra: { label: "Volume da regra", color: "var(--p3)" },
     polimento: { label: "Polimento", color: "var(--p4)" }
   };
-  var TYPE_LABEL = { longao: "Longão", corrida: "Corrida", forca: "Força", prova: "Prova", teste: "Teste", descanso: "" };
+  var TYPE_LABEL = { longao: "CL", cm: "CM", cf: "CF", tiros: "IF+IM+IL", leve: "Leve", forca: "Força", prova: "Prova", teste: "Teste", descanso: "" };
+  var SESSION_NAME = { longao: "Longão (CL)", cm: "Contínuo moderado (CM)", cf: "Contínuo forte (CF)", tiros: "Tiros", leve: "Rodagem leve" };
   var STORAGE_KEY = "ef-volume:form";
   var form = document.getElementById("plan-form");
   var errorBox = document.getElementById("form-error");
@@ -567,7 +610,7 @@ details.sheet[open] > summary::after { content: " −"; }
       run_days: checkedDays().join(","), long_run_day: $("long-day").value,
       recent_distance: $("recent-distance").value, recent_time: $("recent-time").value.trim(),
       goal_time: $("goal-time").value.trim(),
-      volume: radio("volume"), difficulty: radio("difficulty"), focus: radio("focus"),
+      periodization: radio("periodization"), volume: radio("volume"), difficulty: radio("difficulty"), focus: radio("focus"),
       long_run_max_min: $("long-cap").value, level: $("level").value, age: $("age").value,
       pace_tests: $("pace-tests").checked ? "1" : "", events: readEvents()
     };
@@ -626,7 +669,7 @@ details.sheet[open] > summary::after { content: " −"; }
   function saveForm() {
     try {
       var state = { radios: {}, fields: {}, weeksTouched: weeksTouched };
-      ["distance", "deadline", "volume", "difficulty", "focus", "terrain", "surface"].forEach(function (n) { state.radios[n] = radio(n); });
+      ["distance", "deadline", "periodization", "volume", "difficulty", "focus", "terrain", "surface"].forEach(function (n) { state.radios[n] = radio(n); });
       state.runDays = checkedDays();
       state.paceTests = $("pace-tests").checked;
       state.events = eventRows().map(rowValues);
@@ -752,7 +795,7 @@ details.sheet[open] > summary::after { content: " −"; }
   // ---------- Renderização ----------
   function renderPlan(plan) {
     lastPlan = plan;
-    var html = summaryHtml(plan) + alertsHtml(plan) + ruleHtml(plan) + gatesHtml(plan) + chartBlockHtml(plan) +
+    var html = summaryHtml(plan) + alertsHtml(plan) + ruleHtml(plan) + mixHtml(plan) + gatesHtml(plan) + chartBlockHtml(plan) +
       reasonsHtml(plan) + eventsHtml(plan) + weeksHtml(plan) + rulesHtml(plan) + sheetHtml(plan) + footHtml(plan);
     planEl.innerHTML = html;
     drawChart(plan);
@@ -774,9 +817,9 @@ details.sheet[open] > summary::after { content: " −"; }
         "<div><dt>Nível</dt><dd>" + esc(p.level_label) + "<small>" + esc(src) + "</small></dd></div>" +
         "<div><dt>Velocidade de nivelamento</dt><dd>" + (p.speed_kmh != null ? dec((Math.round(p.speed_kmh * 10) / 10).toFixed(1)) + " km/h<small>" + esc(p.speed_text) + "</small>" : "—<small>sem prova recente</small>") + "</dd></div>" +
         "<div><dt>Duração</dt><dd>" + p.weeks_count + " semanas<small>início " + fmtDate(p.start_date) + " · padrão " + R.weeks + ", mínimo " + R.min_weeks + "</small></dd></div>" +
+        "<div><dt>Periodização</dt><dd>" + esc(p.periodization_label) + "<small>" + esc(p.periodization_name) + "</small></dd></div>" +
         "<div><dt>Corridas</dt><dd>" + R.runs + " por semana<small>" + esc(dayList(p.run_days)) + "</small></dd></div>" +
         "<div><dt>Exercício resistido</dt><dd>" + R.strength + " por semana<small>" + esc(dayList(p.strength_days)) + "</small></dd></div>" +
-        "<div><dt>Longão</dt><dd>" + km(R.long_km) + " km<small>" + pct(R.long_pct) + " · demais corridas " + km(R.avg_km) + " km</small></dd></div>" +
       "</dl></section>";
   }
 
@@ -806,6 +849,41 @@ details.sheet[open] > summary::after { content: " −"; }
       '<p class="rowmeta"><span>F' + ln + " · corridas <b>" + R.runs + "</b></span><span>G" + ln + " · exercício resistido <b>" + R.strength +
         "</b></span><span>D" + ln + " · semanas <b>" + R.weeks + "</b></span><span>E" + ln + " · tempo mínimo <b>" + R.min_weeks + " semanas</b></span></p>" +
       "</section>";
+  }
+
+  function pct1(v) { return dec(Math.round(v * 1000) / 10) + "%"; }
+  function mixHtml(p) {
+    var m = p.mix, R = p.rule, H = R.weekly_km;
+    var dayOf = {};
+    Object.keys(p.type_by_day).forEach(function (d) {
+      var t = p.type_by_day[d];
+      (dayOf[t] = dayOf[t] || []).push(DAYS_SHORT[d]);
+    });
+    var bar = m.sessions.map(function (s) {
+      var label = s.share >= 0.12 ? (s.type === "longao" ? "CL" : TYPE_LABEL[s.type] === "IF+IM+IL" ? "Tiros" : TYPE_LABEL[s.type]) + " " + pct1(s.share) : "";
+      return '<span class="' + s.type + '" style="flex:' + s.share + '" title="' + esc(SESSION_NAME[s.type] + " " + pct1(s.share)) + '">' + esc(label) + "</span>";
+    }).join("");
+    var seen = {};
+    var rows = m.sessions.map(function (s) {
+      var rule;
+      if (s.type === "longao") rule = "Planilha: " + pct(R.long_pct) + " (coluna I). Mínimo do CL: 30%" + (R.long_pct < 0.3 - 1e-9 ? ", não atingido pela linha." : ".");
+      else if (s.type === "cm") rule = "Mínimo 25%" + (s.share > m.equal + 1e-9 ? "; a média VSDL seria " + pct1(m.equal) + "." : ".");
+      else if (s.type === "cf") rule = "Mínimo 20%" + (s.share > m.equal + 1e-9 ? "; a média VSDL seria " + pct1(m.equal) + "." : ".");
+      else if (s.type === "tiros") rule = "Tiros " + pct1(m.work) + " da semana (teto 15%) + aquecimento e desaquecimento.";
+      else rule = "Sem mínimo: divide o que sobra com os tiros.";
+      var days = dayOf[s.type] || [], d = s.type === "leve" ? days[(seen.leve = (seen.leve || 0) + 1) - 1] : days[0];
+      return '<tr><td><span class="dot" style="--c:var(--s-' + { longao: "cl", cm: "cm", cf: "cf", tiros: "ti", leve: "lv" }[s.type] + ')"></span>' + esc(SESSION_NAME[s.type]) +
+        "</td><td>" + esc(d || "") + "</td><td>" + pct1(s.share) + "</td><td>" + km(s.share * H) + " km</td><td>" + esc(rule) + "</td></tr>";
+    }).join("");
+    var caps = [["IF", m.part, 0.05], ["IF + IM", 2 * m.part, 0.10], ["IF + IM + IL", m.work, 0.15]].map(function (c) {
+      return '<div class="cap"><span class="k">' + c[0] + '</span><span class="v">' + pct1(c[1]) + " <small>de " + pct(c[2]) + " · " + km(c[1] * H) + ' km</small></span>' +
+        '<span class="meter"><i style="width:' + Math.min(100, c[1] / c[2] * 100) + '%"></i></span></div>';
+    }).join("");
+    return '<section class="panel section"><div class="section-head"><h2>Divisão da semana</h2>' +
+      "<p>Parte da média VSDL (" + pct1(m.equal) + " por corrida) e aplica os mínimos dos contínuos e o teto dos tiros. Km na semana da regra (" + km(H) + " km).</p></div>" +
+      '<div class="mixbar" aria-hidden="true">' + bar + "</div>" +
+      '<div class="table-wrap"><table class="mix-table"><thead><tr><th>Sessão</th><th>Dia</th><th>% da semana</th><th>Km</th><th>Regra</th></tr></thead><tbody>' + rows + "</tbody></table></div>" +
+      '<p class="lead">Tiros por intensidade, com os tetos cumulativos:</p><div class="caps">' + caps + "</div></section>";
   }
 
   function checkLi(ok, text, sub) {
@@ -846,7 +924,8 @@ details.sheet[open] > summary::after { content: " −"; }
     var legend = Object.keys(PHASES).filter(function (k) { return p.weeks.some(function (w) { return w.phase === k; }); }).map(function (k) {
       return '<li><span class="swatch" style="background:' + PHASES[k].color + '"></span>' + PHASES[k].label + "</li>";
     }).join("");
-    legend += '<li><span class="swatch" style="background:var(--faint);opacity:.45"></span>Recuperação (barra clara)</li>';
+    if (p.weeks.some(function (w) { return w.is_regen; })) legend += '<li><span class="swatch" style="background:var(--faint);opacity:.45"></span>Regenerativa (barra clara)</li>';
+    if (p.weeks.some(function (w) { return w.is_increase; })) legend += '<li><span aria-hidden="true">▲</span>' + (p.periodization === "3:1" ? "Aumento" : "Acréscimo") + "</li>";
     legend += '<li><span class="swatch line"></span>Distância semanal da regra</li>';
     return '<section class="panel section"><div class="section-head"><h2>Volume semanal</h2><span class="hint">Toque numa barra para abrir a semana</span></div>' +
       '<ul class="legend">' + legend + '</ul><div class="chart-wrap" id="chart"></div></section>';
@@ -878,10 +957,12 @@ details.sheet[open] > summary::after { content: " −"; }
       var path = "M" + x + "," + (padT + plotH) + " V" + (top + r) + " Q" + x + "," + top + " " + (x + r) + "," + top +
         " H" + (x + barW - r) + " Q" + (x + barW) + "," + top + " " + (x + barW) + "," + (top + r) + " V" + (padT + plotH) + " Z";
       var ph = PHASES[w.phase];
-      var tip = "Semana " + w.number + " · " + ph.label + (w.is_cutback ? " (recuperação)" : "") + " · " + km(w.total_km) + " km";
+      var kl = VE.KIND_LABEL[w.kind];
+      var tip = "Semana " + w.number + " · " + ph.label + (kl ? " (" + kl.toLowerCase() + ")" : "") + " · " + km(w.total_km) + " km";
       svg += '<g class="bar" tabindex="0" role="button" data-week="' + w.number + '" data-tip="' + esc(tip) + '" data-x="' + (x + barW / 2) + '" data-y="' + top + '">' +
         '<rect x="' + (padL + i * slot) + '" y="' + padT + '" width="' + slot + '" height="' + plotH + '" fill="transparent"/>' +
-        '<path d="' + path + '" fill="' + ph.color + '"' + (w.is_cutback ? ' fill-opacity="0.45"' : "") + "/></g>";
+        '<path d="' + path + '" fill="' + ph.color + '"' + (w.is_regen ? ' fill-opacity="0.45"' : "") + "/></g>";
+      if (w.is_increase) svg += '<text x="' + (x + barW / 2) + '" y="' + (top - 5) + '" text-anchor="middle" font-size="10" fill="var(--ink)">▲</text>';
       if ((i + 1) % labelEvery === 0 || i === 0 || i === weeks.length - 1) {
         svg += '<text x="' + (x + barW / 2) + '" y="' + (Ht - 10) + '" text-anchor="middle" font-size="11" fill="var(--muted)">' + w.number + "</text>";
       }
@@ -941,7 +1022,8 @@ details.sheet[open] > summary::after { content: " −"; }
     var weeks = p.weeks.map(function (w, i) {
       var ph = PHASES[w.phase];
       var tags = '<span class="pill"><span class="swatch" style="background:' + ph.color + '"></span>' + ph.label + "</span>";
-      if (w.is_cutback) tags += '<span class="pill">Recuperação</span>';
+      var kl = VE.KIND_LABEL[w.kind];
+      if (kl) tags += '<span class="pill">' + esc(kl) + "</span>";
       if (w.is_race) tags += '<span class="pill">Prova</span>';
       var focus = w.run_count + " corridas · " + w.strength_count + " de força" + (w.is_race ? "" : " · alvo " + km(w.target_km) + " km") + " · " + fmtDate(w.start_date);
       return '<details class="week" id="semana-' + w.number + '"' + (i === 0 ? " open" : "") + "><summary>" +
@@ -964,9 +1046,10 @@ details.sheet[open] > summary::after { content: " −"; }
     var rest = d.items.length === 1 && d.items[0].type === "descanso";
     var total = d.items.reduce(function (s, x) { return s + (x.km || 0); }, 0);
     var items = d.items.map(function (x) {
-      var tag = TYPE_LABEL[x.type] && x.type !== "corrida" ? '<span class="tag ' + x.type + '">' + TYPE_LABEL[x.type] + "</span>" : "";
-      var title = x.type === "longao" || x.type === "corrida" ? x.title + " " + km(x.km) + " km" : x.title;
-      return '<div class="day-title">' + esc(title) + " " + tag + (x.note ? '<span class="note">' + esc(x.note) + "</span>" : "") + "</div>";
+      var tag = TYPE_LABEL[x.type] ? '<span class="tag ' + x.type + '">' + TYPE_LABEL[x.type] + "</span>" : "";
+      var title = SESSION_NAME[x.type] ? x.title + " " + km(x.km) + " km" : x.title;
+      var parts = x.parts ? '<ul class="parts">' + x.parts.map(function (pt) { return "<li>" + esc(pt.label) + " <b>" + km(pt.km) + "</b></li>"; }).join("") + "</ul>" : "";
+      return '<div class="day-title">' + esc(title) + " " + tag + (x.note ? '<span class="note">' + esc(x.note) + "</span>" : "") + "</div>" + parts;
     }).join("");
     return '<li class="day' + (rest ? " rest" : "") + '" aria-label="' + DAYS[d.day] + '"><span class="day-name">' + DAYS_SHORT[d.day] +
       "<small>" + fmtDate(d.date) + '</small></span><div class="day-items">' + items + '</div><span class="day-km">' + (total ? km(total) : "—") + "</span></li>";
@@ -976,8 +1059,9 @@ details.sheet[open] > summary::after { content: " −"; }
     var r = VE.describeRules();
     function list(rows) { return "<dl>" + rows.map(function (x) { return "<dt>" + esc(x[0]) + "</dt><dd>" + esc(x[1]) + "</dd>"; }).join("") + "</dl>"; }
     return '<section class="panel section"><div class="section-head"><h2>Regras usadas</h2>' +
-      "<p>A planilha define o volume de cada nível. A evolução semana a semana não está nela: os complementos à direita preenchem isso e podem ser trocados.</p></div>" +
+      "<p>A planilha define o volume de cada nível; as suas regras definem a intensidade e a periodização. Os complementos cobrem o que nenhuma das duas diz e podem ser trocados.</p></div>" +
       '<div class="rules"><div><h3><span class="src">.xlsx</span>Da planilha</h3>' + list(r.planilha) + "</div>" +
+      '<div><h3><span class="src coach">treinador</span>Das suas regras</h3>' + list(r.treinador) + "</div>" +
       '<div><h3><span class="src add">+</span>Complementos da engine</h3>' + list(r.complemento) + "</div></div></section>";
   }
 

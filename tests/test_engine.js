@@ -80,16 +80,60 @@ test("plano padrão: semanas, corridas e força da linha", () => {
   assert.ok(!race.days.flatMap((d) => d.items).some((x) => x.type === "longao"));
 });
 
-test("progressão: até 10% por semana e nunca acima da regra", () => {
-  const p = plan({ weekly_km: "20" });
-  let last = null;
-  p.weeks.forEach((w) => {
+const r1 = (x) => Math.round(x * 10) / 10;
+
+test("3:1: três semanas de manutenção e uma de aumento de até 30%, em degraus até a regra", () => {
+  const curve = E.trainingCurve("3:1", 12, 30, 46.6).map((w) => r1(w.target));
+  assert.deepStrictEqual(curve, [30, 30, 30, 39, 39, 39, 39, 46.6, 46.6, 46.6, 46.6, 46.6]);
+  const p = plan({ weekly_km: "20", periodization: "3:1" });
+  p.weeks.filter((w) => w.phase !== "polimento").forEach((w, i, all) => {
     assert.ok(w.target_km <= p.rule.weekly_km + 1e-9);
-    if (w.is_cutback || w.phase === "polimento") return;
-    if (last != null) assert.ok(w.target_km <= last * 1.1 + 1e-9);
-    last = w.target_km;
+    if (i === 0) return;
+    const growth = w.target_km / all[i - 1].target_km - 1;
+    if (w.number % 4 === 0) assert.ok(growth <= 0.30 + 1e-9, "semana " + w.number);
+    else assert.ok(Math.abs(growth) < 1e-9, "semana " + w.number + " deveria manter");
   });
-  assert.ok(near(p.weeks[0].target_km, 20));
+});
+
+test("alternado: acréscimo de até 10% e regenerativa que volta ao patamar", () => {
+  const curve = E.trainingCurve("alternado", 9, 30, 46.6);
+  assert.deepStrictEqual(curve.map((w) => r1(w.target)), [30, 33, 30, 33, 33, 36.3, 33, 36.3, 36.3]);
+  assert.deepStrictEqual(curve.slice(0, 4).map((w) => w.kind), ["inicio", "acrescimo", "regenerativa", "acrescimo"]);
+  const p = plan({ weekly_km: "20", periodization: "alternado" });
+  p.weeks.filter((w) => w.phase !== "polimento").forEach((w, i, all) => {
+    assert.ok(w.target_km <= p.rule.weekly_km + 1e-9);
+    if (i > 0) assert.ok(w.target_km <= all[i - 1].target_km * 1.1 + 1e-9, "semana " + w.number);
+  });
+  assert.strictEqual(r1(E.trainingCurve("alternado", 8, 38.8, 38.8)[1].target), 38.8); // na regra, não sobe mais
+});
+
+test("divisão da semana: mínimos dos contínuos e teto dos tiros", () => {
+  E.sheetTable().forEach((r) => {
+    const m = r.mix, by = {};
+    m.sessions.forEach((s) => { by[s.type] = s.share; });
+    const sum = m.sessions.reduce((a, s) => a + s.share, 0);
+    assert.ok(near(sum, 1), "soma linha " + r.line);
+    assert.strictEqual(m.sessions.length, r.runs);
+    assert.ok(near(by.longao, r.long_pct));
+    assert.ok(by.cm >= 0.25 - 1e-9, "CM linha " + r.line);
+    if (r.runs === 3) assert.ok(!("cf" in by));
+    else assert.ok(by.cf >= 0.20 - 1e-9, "CF linha " + r.line);
+    assert.ok(m.work <= 0.15 + 1e-9 && m.part <= 0.05 + 1e-9 && 2 * m.part <= 0.10 + 1e-9, "tiros linha " + r.line);
+    assert.ok(m.work < by.tiros, "aquecimento linha " + r.line);
+    m.sessions.forEach((s) => assert.ok(s.share > 0, s.type + " linha " + r.line));
+  });
+  const m = E.rule("10k", "intermediario").mix; // 4 corridas: 30 / 25 / 23,3 / 21,7
+  assert.deepStrictEqual(m.sessions.map((s) => [s.type, r1(s.share * 100)]), [["longao", 30], ["cm", 25], ["cf", 23.3], ["tiros", 21.7]]);
+});
+
+test("treinos fortes longe uns dos outros e sessão de tiros completa", () => {
+  const p = plan();
+  const order = [0, 1, 2, 3, 4, 5, 6].map((d) => p.type_by_day[d] || "");
+  const w = { tiros: 3, cf: 2, longao: 2 };
+  for (let d = 0; d < 7; d++) assert.ok(!(w[order[d]] && w[order[(d + 1) % 7]]), "dias " + d + " e " + (d + 1));
+  const t = p.weeks[4].days.flatMap((d) => d.items).find((x) => x.type === "tiros");
+  assert.ok(Math.abs(t.parts.reduce((a, x) => a + x.km, 0) - t.km) < 0.02);
+  assert.deepStrictEqual(t.parts.map((x) => x.label), ["Aquecimento", "IF", "IM", "IL", "Desaquecimento"]);
 });
 
 test("abaixo do tempo mínimo o plano não é gerado", () => {
@@ -137,7 +181,9 @@ test("provas, testes e testes automáticos", () => {
   const w6 = p.weeks[5].days.flatMap((d) => d.items);
   assert.ok(w6.some((x) => x.type === "prova" && x.km === 5));
   assert.ok(!w6.some((x) => x.type === "longao"));
-  assert.ok(p.events.some((e) => e.auto && e.week === 8));
+  assert.ok(p.events.some((e) => e.auto && e.week === 7)); // a semana 6 já tem a prova: o teste vai para a 7
+  const alt = plan({ periodization: "alternado", pace_tests: "1", weekly_km: "30" });
+  alt.events.forEach((e) => assert.ok(alt.weeks[e.week - 1].days.some((d) => d.items.some((x) => x.type === "teste"))));
   assert.strictEqual(p.events.find((e) => !e.auto).speed_level, "intermediario"); // 13,0 km/h
 });
 
@@ -145,7 +191,7 @@ test("linhas em que o longão é menor que as outras corridas geram aviso", () =
   const p = plan({ distance: "5k", weekly_km: "10", longest_run_km: "4", recent_distance: "5", recent_time: "40:00",
                    run_days: "1,3,6" });
   assert.strictEqual(p.level, "principiante");
-  assert.ok(p.warnings.some((w) => w.level === "info" && /menor que cada uma/.test(w.text)));
+  assert.ok(p.warnings.some((w) => w.level === "info" && /fica menor que/.test(w.text)));
 });
 
 console.log(passed + " testes passaram");

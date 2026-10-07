@@ -1,14 +1,16 @@
 /*
  * Engine de corrida por controle de volume.
  *
- * As regras vêm da planilha regras/regras_de_controle_de_volume.xlsx: para cada distância e
- * nível, a distância semanal, o percentual do longão, o número de corridas e de treinos de
- * exercício resistido, a duração do plano, o tempo mínimo, a faixa de velocidade que define o
- * nível e o pré-requisito para passar à distância seguinte.
+ * Três fontes de regras, mantidas separadas para que fique claro de onde vem cada número:
  *
- * A planilha não diz como o volume evolui semana a semana. Para montar o calendário, a engine
- * usa alguns complementos (COMPLEMENT), listados à parte em describeRules() para que fique
- * claro o que é regra da planilha e o que foi acrescentado.
+ * - SHEET / PREREQ: a planilha regras/regras_de_controle_de_volume.xlsx. Para cada distância
+ *   e nível: distância semanal, percentual do longão, número de corridas e de treinos de
+ *   exercício resistido, duração do plano, tempo mínimo, faixa de velocidade que define o nível
+ *   e o pré-requisito para passar à distância seguinte.
+ * - COACH: as regras do treinador sobre intensidade (teto dos tiros e mínimo dos contínuos, em %
+ *   do volume semanal) e os dois modelos de periodização (3:1 e alternado).
+ * - COMPLEMENT: o que nenhuma das duas define e a engine precisou decidir (polimento, escolha
+ *   dos dias, aquecimento dos tiros...). describeRules() lista tudo para a página.
  *
  * Funciona no navegador (window.VolumeEngine) e no Node (require).
  */
@@ -18,7 +20,7 @@
 })(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
-  var VERSION = "1.0.0";
+  var VERSION = "1.1.0";
 
   function PlanError(message) {
     this.name = "PlanError";
@@ -35,10 +37,6 @@
   var LEVEL_LABEL = {
     principiante: "Principiante", iniciante: "Iniciante", intermediario: "Intermediário",
     avancado: "Avançado", elite: "Elite"
-  };
-  var LEVEL_ALIASES = {
-    principiante: "principiante", iniciante: "iniciante", intermediario: "intermediario",
-    avancado: "avancado", elite: "elite"
   };
 
   var DISTANCES = ["5k", "10k", "21k", "42k", "50k"];
@@ -127,6 +125,47 @@
     });
   });
 
+  // ------------------------------------------------------------------------
+  // Regras do treinador: intensidade e periodização
+  // ------------------------------------------------------------------------
+
+  var COACH = {
+    // Teto dos tiros, cumulativo: IF até 5%, IF + IM até 10%, IF + IM + IL até 15% da semana.
+    tiros_caps: [["IF", 0.05], ["IF+IM", 0.10], ["IF+IM+IL", 0.15]],
+    // Mínimo de cada treino contínuo, em % da semana. O longão é o contínuo leve (CL).
+    continuous_min: { CF: 0.20, CM: 0.25, CL: 0.30 },
+    periodization: {
+      "3:1": { label: "3:1", name: "3 semanas de manutenção e 1 de aumento", increase: 0.30 },
+      alternado: { label: "Alternado", name: "semanas de acréscimo e regenerativas", increase: 0.10 }
+    }
+  };
+  var PERIODIZATIONS = ["3:1", "alternado"];
+
+  // ------------------------------------------------------------------------
+  // Complementos (nem a planilha nem as regras do treinador definem)
+  // ------------------------------------------------------------------------
+
+  var COMPLEMENT = {
+    start_floor: 0.5,          // começa no volume atual, nunca abaixo de 50% da regra
+    taper: { "5k": [0.6], "10k": [0.6], "21k": [0.75, 0.6], "42k": [0.8, 0.65, 0.5], "50k": [0.8, 0.65, 0.5] },
+    tiros_work_max: 0.6,       // tiros ocupam até 60% da sessão; o resto é aquecimento e desaquecimento
+    near_fraction: 0.95,       // "próximo a X km" aceito a partir de 95% de X
+    test_every: 6,             // testes de nivelamento a cada ~6 semanas
+    test_km: 5,
+    race_strength_gap: 2       // na semana da prova, nada de força nos 2 dias antes dela
+  };
+
+  var SESSION = {
+    longao: { title: "Longão", code: "CL", weight: 2 },
+    cm: { title: "Contínuo moderado", code: "CM", weight: 1 },
+    cf: { title: "Contínuo forte", code: "CF", weight: 2 },
+    tiros: { title: "Tiros", code: "IF+IM+IL", weight: 3 },
+    leve: { title: "Rodagem leve", code: "", weight: 0 }
+  };
+
+  function pct(x) { return Math.round(x * 100) + "%"; }
+  function pct1(x) { var v = Math.round(x * 1000) / 10; return String(v).replace(".", ",") + "%"; }
+
   function speedRangeText(distance, level) {
     var slow = SHEET[distance].slow;
     return {
@@ -145,8 +184,36 @@
       var src = SHEET[w[1]].rows[w[2]];
       return "igual ao " + SHEET_DISTANCE[w[1]] + " " + LEVEL_LABEL[w[2]].toLowerCase() + " (H" + r.line + " = H" + src.line + ")";
     }
-    var pct = Math.round(w[1] * 100);
-    return "nível anterior + " + pct + "% (H" + r.line + " = H" + (r.line - 1) + " + " + pct + "%)";
+    var p = Math.round(w[1] * 100);
+    return "nível anterior + " + p + "% (H" + r.line + " = H" + (r.line - 1) + " + " + p + "%)";
+  }
+
+  /**
+   * Divisão da semana entre as sessões, em fração do volume semanal.
+   * Parte da média VSDL da planilha (as outras corridas iguais) e corrige pelos mínimos do
+   * treinador: CM sobe até 25% e CF até 20%; o que eles ganham sai, em partes iguais, das
+   * sessões sem mínimo (tiros e rodagens leves). Com 3 corridas não cabe o CF.
+   */
+  function sessionMix(runs, longPct) {
+    var types = runs === 3 ? ["cm", "tiros"] : ["cm", "cf", "tiros"];
+    while (types.length < runs - 1) types.push("leve");
+    var equal = (1 - longPct) / (runs - 1);
+    var mins = { cm: COACH.continuous_min.CM, cf: COACH.continuous_min.CF };
+    var shares = {}, raised = 0, flexible = [];
+    types.forEach(function (t, i) {
+      var key = t + (t === "leve" ? i : "");
+      if (mins[t] != null) {
+        shares[key] = Math.max(equal, mins[t]);
+        raised += shares[key] - equal;
+      } else flexible.push(key);
+    });
+    flexible.forEach(function (key) { shares[key] = equal - raised / flexible.length; });
+    var sessions = [{ type: "longao", share: longPct }].concat(types.map(function (t, i) {
+      return { type: t, share: shares[t + (t === "leve" ? i : "")] };
+    }));
+    var tiros = sessions.filter(function (s) { return s.type === "tiros"; })[0];
+    var work = Math.min(COACH.tiros_caps[2][1], tiros.share * COMPLEMENT.tiros_work_max);
+    return { sessions: sessions, equal: equal, tiros_share: tiros.share, work: work, part: work / 3 };
   }
 
   /** A linha da planilha para a distância e o nível, com as colunas H a K calculadas. */
@@ -160,7 +227,8 @@
       runs: r.runs, strength: r.strength, weeks: SHEET[distance].weeks, min_weeks: r.min_weeks,
       speed_range: speedRangeText(distance, level),
       weekly_km: weekly, long_pct: r.long_pct, long_km: long, vsdl_km: vsdl, avg_km: vsdl / (r.runs - 1),
-      weekly_formula: weeklyFormula(distance, level)
+      weekly_formula: weeklyFormula(distance, level),
+      mix: sessionMix(r.runs, r.long_pct)
     };
   }
 
@@ -202,25 +270,7 @@
     };
   }
 
-  // ------------------------------------------------------------------------
-  // Complementos (não estão na planilha)
-  // ------------------------------------------------------------------------
-
-  var COMPLEMENT = {
-    start_floor: 0.5,        // começa no volume atual, nunca abaixo de 50% da regra
-    ramp_rate: 0.10,         // sobe até 10% por semana até a distância semanal da regra
-    cutback_every: 4,        // toda 4ª semana de treino é de recuperação
-    cutback_fraction: 0.75,  // com 75% do volume
-    taper: { "5k": [0.6], "10k": [0.6], "21k": [0.75, 0.6], "42k": [0.8, 0.65, 0.5], "50k": [0.8, 0.65, 0.5] },
-    near_fraction: 0.95,     // "próximo a X km" aceito a partir de 95% de X
-    test_every: 6,           // testes de nivelamento: a cada ~6 semanas, em semana de recuperação
-    test_km: 5,
-    race_strength_gap: 2     // na semana da prova, nada de força nos 2 dias antes dela
-  };
-
-  function pct(x) { return Math.round(x * 100) + "%"; }
-
-  /** O que é regra da planilha e o que é complemento, para mostrar na página. */
+  /** O que é regra da planilha, do treinador e complemento, para mostrar na página. */
   function describeRules() {
     var c = COMPLEMENT;
     return {
@@ -230,17 +280,23 @@
         ["Sessões", "Número de corridas e de treinos de exercício resistido por semana, conforme a linha."],
         ["Distância semanal", "Volume-alvo da linha (coluna H). Cada nível soma 10% a 30% ao anterior e o principiante de uma distância parte de um nível da distância anterior."],
         ["Longão", "Percentual fixo da distância semanal (25% a 40%, coluna I)."],
-        ["Demais corridas", "VSDL = distância semanal − longão, dividido igualmente entre as outras corridas (média VSDL)."],
+        ["Demais corridas", "VSDL = distância semanal − longão, dividido entre as outras corridas (média VSDL). As regras de intensidade ajustam essa divisão."],
         ["Pré-requisito", "Para passar à distância seguinte: rodagem semanal mínima e longão (linhas 7, 13, 19 e 25)."]
       ],
+      treinador: [
+        ["Tiros", "Teto em % do volume semanal: IF até 5%, IF + IM até 10%, IF + IM + IL até 15%."],
+        ["Contínuos", "Mínimo em % do volume semanal: CF 20%, CM 25%, CL 30%. Uma sessão de cada; o longão é o CL."],
+        ["3:1", "3 semanas de manutenção e 1 de aumento, de até 30%. O novo volume vira o patamar das semanas seguintes."],
+        ["Alternado", "Semanas de acréscimo (até 10%) alternadas com regenerativas, que voltam ao patamar. A cada dois pares, o patamar sobe para o volume do acréscimo."]
+      ],
       complemento: [
-        ["Início", "O plano começa no seu volume atual, entre " + pct(c.start_floor) + " e 100% da distância semanal da regra."],
-        ["Progressão", "Sobe até " + pct(c.ramp_rate) + " por semana até chegar à distância semanal da regra e fica nela."],
-        ["Recuperação", "Toda " + c.cutback_every + "ª semana de treino tem " + pct(c.cutback_fraction) + " do volume."],
+        ["Início e teto", "O plano começa no seu volume atual, entre " + pct(c.start_floor) + " e 100% da distância semanal da linha, e para de subir quando chega nela."],
+        ["Divisão das sessões", "Parte da média VSDL. CM e CF sobem até o mínimo, e a diferença sai igualmente dos tiros e das rodagens leves. Com 3 corridas não cabe o CF; com 5 ou 6, as corridas a mais são rodagens leves."],
+        ["Sessão de tiros", "Tiros em até " + pct(c.tiros_work_max) + " da sessão (e no máximo 15% da semana), divididos igualmente entre IF, IM e IL. O resto é aquecimento e desaquecimento."],
+        ["Ordem na semana", "Os treinos mais fortes ficam longe uns dos outros e da véspera do longão. A força vai nos dias sem corrida; se faltar dia, entra depois da corrida mais leve. Na semana da prova, sem força nos " + c.race_strength_gap + " dias antes dela e a véspera vira rodagem leve."],
         ["Polimento", "Últimas semanas com menos volume (5 e 10 km: 60% na semana da prova; 21 km: 75% e 60%; 42 km e ultra: 80%, 65% e 50%). Na semana da prova, a prova entra no lugar do longão."],
-        ["Dias", "Com mais dias marcados que corridas pedidas, a engine escolhe os mais espaçados, evitando a véspera do longão. A força vai nos dias sem corrida; se faltar dia, entra depois de uma corrida curta. Na semana da prova, sem força nos " + c.race_strength_gap + " dias antes dela."],
         ["Próximo a", "“Longão próximo a X km” é aceito a partir de " + pct(c.near_fraction) + " de X."],
-        ["Testes", "Teste de nivelamento de " + c.test_km + " km em semana de recuperação, a cada ~" + c.test_every + " semanas, no lugar de uma corrida."],
+        ["Testes", "Teste de nivelamento de " + c.test_km + " km a cada ~" + c.test_every + " semanas (de preferência numa regenerativa), no lugar dos tiros."],
         ["Sem prova recente", "Sem velocidade de nivelamento, o nível sai do volume atual: o maior nível cuja distância semanal você já corre."]
       ]
     };
@@ -304,8 +360,15 @@
   function parseLevel(value) {
     if (blank(value) || plain(value) === "auto") return null;
     var key = plain(value);
-    if (!LEVEL_ALIASES[key]) throw new PlanError("Nível desconhecido: " + value + ".");
-    return LEVEL_ALIASES[key];
+    if (LEVELS.indexOf(key) < 0) throw new PlanError("Nível desconhecido: " + value + ".");
+    return key;
+  }
+  function parsePeriodization(value) {
+    if (blank(value)) return "3:1";
+    var key = plain(value).replace(/\s/g, "");
+    if (key === "3:1" || key === "31" || key === "3x1") return "3:1";
+    if (key === "alternado") return "alternado";
+    throw new PlanError("Periodização desconhecida: " + value + " (use 3:1 ou alternado).");
   }
 
   // Datas como dias desde 1970-01-01 (UTC). Dia da semana: 0 = segunda ... 6 = domingo.
@@ -347,6 +410,15 @@
     })(0, []);
     return out;
   }
+  function permutations(items) {
+    if (items.length <= 1) return [items.slice()];
+    var out = [];
+    items.forEach(function (x, i) {
+      var rest = items.slice(0, i).concat(items.slice(i + 1));
+      permutations(rest).forEach(function (p) { out.push([x].concat(p)); });
+    });
+    return out;
+  }
   function circularGaps(days) {
     var s = days.slice().sort(function (a, b) { return a - b; });
     if (s.length < 2) return [7];
@@ -370,14 +442,35 @@
     return chosen.concat([longDay]).sort(function (a, b) { return a - b; });
   }
 
-  /** Exercício resistido: dias sem corrida primeiro; se faltar, depois de uma corrida curta. */
-  function pickStrengthDays(runDays, longDay, count) {
+  /**
+   * Tipo de sessão de cada dia de corrida: os treinos mais fortes longe uns dos outros.
+   * Minimiza a soma, entre dias seguidos, do produto dos pesos de intensidade.
+   */
+  function assignSessionTypes(runDays, longDay, types) {
+    var others = runDays.filter(function (d) { return d !== longDay; });
+    var assignment = best(permutations(types), function (perm) {
+      var w = [0, 0, 0, 0, 0, 0, 0];
+      w[longDay] = SESSION.longao.weight;
+      others.forEach(function (d, i) { w[d] = SESSION[perm[i]].weight; });
+      var s = 0;
+      for (var d = 0; d < 7; d++) s += w[d] * w[(d + 1) % 7];
+      return s;
+    });
+    var byDay = {};
+    byDay[longDay] = "longao";
+    others.forEach(function (d, i) { byDay[d] = assignment[i]; });
+    return byDay;
+  }
+
+  /** Exercício resistido: dias sem corrida primeiro; se faltar, depois da corrida mais leve. */
+  function pickStrengthDays(runDays, longDay, count, typeByDay) {
     var free = [0, 1, 2, 3, 4, 5, 6].filter(function (d) { return runDays.indexOf(d) < 0; });
     var before = mod(longDay - 1, 7);
     function score(set) {
       var gaps = circularGaps(set);
       var b2b = set.length > 1 ? gaps.filter(function (g) { return g === 1; }).length : 0;
-      return 10 * b2b + 4 * (set.indexOf(before) >= 0) - Math.min.apply(null, gaps);
+      var load = set.reduce(function (s, d) { return s + (typeByDay[d] ? SESSION[typeByDay[d]].weight : 0); }, 0);
+      return 10 * b2b + 4 * (set.indexOf(before) >= 0) + 6 * load - Math.min.apply(null, gaps);
     }
     if (free.length >= count) {
       return { days: best(combinations(free, count), score).sort(function (a, b) { return a - b; }), doubled: [] };
@@ -385,6 +478,40 @@
     var shortRuns = runDays.filter(function (d) { return d !== longDay; });
     var extra = best(combinations(shortRuns, count - free.length), function (set) { return score(free.concat(set)); });
     return { days: free.concat(extra).sort(function (a, b) { return a - b; }), doubled: extra.slice().sort(function (a, b) { return a - b; }) };
+  }
+
+  // ------------------------------------------------------------------------
+  // Volume semana a semana (modelos de periodização)
+  // ------------------------------------------------------------------------
+
+  var KIND_LABEL = {
+    inicio: "Início", manutencao: "Manutenção", aumento: "Aumento", patamar: "Novo patamar", acrescimo: "Acréscimo",
+    regenerativa: "Regenerativa", regra: "", polimento: ""
+  };
+
+  /** Alvo de cada semana de treino (sem o polimento) pelo modelo escolhido. */
+  function trainingCurve(model, weeks, startKm, H) {
+    var out = [], level = startKm, inc = COACH.periodization[model].increase;
+    if (model === "3:1") {
+      for (var i = 0; i < weeks; i++) {
+        var n = i + 1, kind, from = level;
+        if (n % 4 === 0 && level < H - 1e-9) { level = Math.min(H, level * (1 + inc)); kind = "aumento"; }
+        else kind = level >= H - 1e-9 ? "regra" : "manutencao";
+        out.push({ target: level, kind: kind, from: from });
+      }
+      return out;
+    }
+    var high = level;
+    for (var j = 0; j < weeks; j++) {
+      var pos = j % 4, k, t, prev = j ? out[j - 1].target : level;
+      if (pos === 0 && j > 0) level = high;
+      if (pos === 1) high = Math.min(H, level * (1 + inc));
+      if (pos === 0) { t = level; k = level >= H - 1e-9 ? "regra" : j === 0 ? "inicio" : "patamar"; }
+      else if (pos === 2) { t = level; k = level >= H - 1e-9 ? "regra" : "regenerativa"; }
+      else { t = high; k = high > level + 1e-9 ? "acrescimo" : "regra"; }
+      out.push({ target: t, kind: k, from: prev });
+    }
+    return out;
   }
 
   // ------------------------------------------------------------------------
@@ -447,18 +574,38 @@
   }
 
   // km com 2 casas: a tela mostra 1 casa, e o total da semana não acumula erro de arredondamento.
-  function item(type, title, kmv, note) {
-    return { type: type, title: title, km: kmv == null ? null : Math.round(kmv * 100) / 100, note: note || "" };
+  function r2(x) { return Math.round(x * 100) / 100; }
+  function item(type, title, kmv, note, extra) {
+    var it = { type: type, title: title, km: kmv == null ? null : r2(kmv), note: note || "" };
+    if (extra) Object.keys(extra).forEach(function (k) { it[k] = extra[k]; });
+    return it;
+  }
+
+  function sessionItem(type, share, weekKm, mix) {
+    var kmv = share * weekKm, s = SESSION[type];
+    if (type === "longao") return item("longao", s.title, kmv, "CL · " + pct1(share) + " da semana", { share: share, code: "CL" });
+    if (type === "cm") return item("cm", s.title, kmv, pct1(share) + " da semana (mínimo 25%)", { share: share, code: "CM" });
+    if (type === "cf") return item("cf", s.title, kmv, pct1(share) + " da semana (mínimo 20%)", { share: share, code: "CF" });
+    if (type === "leve") return item("leve", s.title, kmv, pct1(share) + " da semana", { share: share, code: "" });
+    var part = mix.part * weekKm, warm = (kmv - 3 * part) / 2;
+    return item("tiros", s.title, kmv, pct1(share) + " da semana · " + pct1(mix.work) + " em tiros (máximo 15%)", {
+      share: share, code: "IF+IM+IL",
+      parts: [["Aquecimento", warm], ["IF", part], ["IM", part], ["IL", part], ["Desaquecimento", warm]].map(function (p) {
+        return { label: p[0], km: r2(p[1]) };
+      })
+    });
   }
 
   /**
    * Monta o plano. `payload` tem os mesmos campos do formulário da Endurance Forge
-   * (strings, como vêm do formulário). `options.today` (AAAA-MM-DD) fixa a data de hoje nos testes.
+   * (strings, como vêm do formulário) e `periodization` ("3:1" ou "alternado").
+   * `options.today` (AAAA-MM-DD) fixa a data de hoje nos testes.
    */
   function planFromPayload(payload, options) {
     options = options || {};
     var c = classify(payload);
-    var distance = c.distance, level = c.level, R = c.rule, H = R.weekly_km;
+    var distance = c.distance, level = c.level, R = c.rule, H = R.weekly_km, mix = R.mix;
+    var model = parsePeriodization(payload.periodization), M = COACH.periodization[model];
     var weeklyNow = parseNumber(payload.weekly_km, "Km por semana", 0, 400);
     if (weeklyNow == null) throw new PlanError("Informe quantos km você corre por semana (0 se ainda não corre).");
     var longestNow = parseNumber(payload.longest_run_km, "Maior corrida", 0, 200) || 0;
@@ -502,50 +649,54 @@
       longDay = marked.indexOf(6) >= 0 ? 6 : marked.indexOf(5) >= 0 ? 5 : marked[marked.length - 1];
     }
     var runDays = pickRunDays(marked, longDay, R.runs);
-    var strength = pickStrengthDays(runDays, longDay, R.strength);
+    var typeByDay = assignSessionTypes(runDays, longDay, mix.sessions.slice(1).map(function (s) { return s.type; }));
+    var strength = pickStrengthDays(runDays, longDay, R.strength, typeByDay);
     var raceDay = byDate ? weekday(raceDate) : longDay;
+    var tirosDay = +Object.keys(typeByDay).filter(function (d) { return typeByDay[d] === "tiros"; })[0];
 
     // --- Volume semana a semana -------------------------------------------
     var taperFr = COMPLEMENT.taper[distance]; // o tempo mínimo (8+ semanas) sempre comporta o polimento
-    var nTaper = taperFr.length;
-    var nTrain = total - nTaper;
+    var nTrain = total - taperFr.length;
     var startKm = Math.min(Math.max(weeklyNow, H * COMPLEMENT.start_floor), H);
-    var level0 = startKm, weeksPlan = [], reachedAt = null, peak = 0;
+    var curve = trainingCurve(model, nTrain, startKm, H);
+    var peak = Math.max.apply(null, curve.map(function (w) { return w.target; }));
+    var reachedAt = null;
+    curve.forEach(function (w, i) { if (reachedAt == null && w.target >= H - 1e-9) reachedAt = i + 1; });
+
+    var weeksPlan = [];
     for (var i = 0; i < total; i++) {
-      var n = i + 1, w = { number: n, is_cutback: false, is_race: n === total, reasons: [] };
+      var n = i + 1, w = { number: n, is_race: n === total, reasons: [] };
       if (i < nTrain) {
-        var cut = n % COMPLEMENT.cutback_every === 0 && i !== nTrain - 1;
-        if (cut) {
-          w.is_cutback = true;
-          w.target_km = level0 * COMPLEMENT.cutback_fraction;
-          w.reasons.push({ code: "volume", text: "Recuperação (complemento): " + pct(COMPLEMENT.cutback_fraction) + " de " + km1(level0) + " km = " + km1(w.target_km) + " km." });
-        } else {
-          var prev = level0;
-          if (i > 0) level0 = Math.min(H, level0 * (1 + COMPLEMENT.ramp_rate));
-          w.target_km = level0;
-          if (level0 >= H - 1e-9) {
-            if (reachedAt == null) reachedAt = n;
-            w.reasons.push({ code: "volume", text: "Distância semanal da regra: " + km1(H) + " km (" + R.weekly_formula + ")." });
-          } else if (i === 0) {
-            w.reasons.push({ code: "volume", text: "Início (complemento): " + km1(level0) + " km" +
-              (weeklyNow < H * COMPLEMENT.start_floor ? ", 50% da regra." : ", o seu volume atual.") + " A regra é " + km1(H) + " km." });
-          } else {
-            w.reasons.push({ code: "volume", text: "Progressão (complemento): +" + pct(COMPLEMENT.ramp_rate) + " sobre " + km1(prev) + " km = " + km1(level0) + " km, ainda abaixo da regra (" + km1(H) + " km)." });
-          }
-          peak = Math.max(peak, level0);
+        var cw = curve[i];
+        w.target_km = cw.target;
+        w.kind = cw.kind;
+        w.phase = cw.target >= H - 1e-9 ? "regra" : "progressao";
+        var why = {
+          manutencao: "Manutenção (" + M.label + "): mantém " + km1(cw.target) + " km.",
+          aumento: "Aumento (" + M.label + "): " + km1(cw.from) + " → " + km1(cw.target) + " km (+" + pct(cw.target / cw.from - 1) + ", até " + pct(M.increase) + ").",
+          patamar: "Novo patamar (alternado): " + km1(cw.target) + " km, o volume das últimas semanas de acréscimo.",
+          acrescimo: "Acréscimo (alternado): " + km1(cw.from) + " → " + km1(cw.target) + " km (+" + pct(cw.target / cw.from - 1) + ", até 10%).",
+          regenerativa: "Regenerativa (alternado): volta ao patamar de " + km1(cw.target) + " km.",
+          regra: "Distância semanal da regra: " + km1(H) + " km (" + R.weekly_formula + ")."
+        }[cw.kind];
+        if (i === 0 && cw.kind !== "regra") {
+          why = "Início: " + km1(cw.target) + " km" + (weeklyNow < H * COMPLEMENT.start_floor ? ", 50% da regra (complemento)." : ", o seu volume atual.") +
+            " A regra é " + km1(H) + " km.";
         }
-        w.phase = level0 >= H - 1e-9 ? "regra" : "progressao";
+        w.reasons.push({ code: "volume", text: why });
       } else {
         var k = i - nTrain;
         w.phase = "polimento";
-        w.target_km = Math.max(peak, startKm) * taperFr[k];
-        w.reasons.push({ code: "volume", text: "Polimento (complemento): " + pct(taperFr[k]) + " de " + km1(Math.max(peak, startKm)) + " km = " + km1(w.target_km) + " km." });
+        w.kind = "polimento";
+        w.target_km = peak * taperFr[k];
+        w.reasons.push({ code: "volume", text: "Polimento (complemento): " + pct(taperFr[k]) + " de " + km1(peak) + " km = " + km1(w.target_km) + " km." });
       }
+      w.is_regen = w.kind === "regenerativa";
+      w.is_increase = w.kind === "aumento" || w.kind === "acrescimo";
       weeksPlan.push(w);
     }
-    if (peak === 0) peak = startKm;
 
-    // --- Sessões ---------------------------------------------------------
+    // --- Provas e testes ------------------------------------------------------
     var events = parseEvents(payload.events, byDate, start);
     var ignored = [];
     events = events.filter(function (ev) {
@@ -558,75 +709,79 @@
         " fora do plano: só valem entre a semana 1 e a semana " + (total - 1) + " (a semana " + total + " é a da prova-alvo)." });
     }
     if (String(payload.pace_tests) === "1" || payload.pace_tests === true) {
-      var lastTest = 0;
-      weeksPlan.forEach(function (w) {
-        if (!w.is_cutback || w.number - lastTest < COMPLEMENT.test_every) return;
-        if (events.some(function (e) { return e.week === w.number; })) return;
-        events.push({ kind: "teste", week: w.number, day: null, date: null, distance_km: COMPLEMENT.test_km, time_s: null, auto: true });
-        lastTest = w.number;
-      });
+      var last = 0;
+      for (var t = 1; t <= nTrain; t++) {
+        if (t - last < COMPLEMENT.test_every) continue;
+        var pick = t;
+        if (!weeksPlan[t - 1].is_regen && t < nTrain && weeksPlan[t].is_regen) pick = t + 1;
+        if (events.some(function (e) { return e.week === pick; })) continue;
+        events.push({ kind: "teste", week: pick, day: null, date: null, distance_km: COMPLEMENT.test_km, time_s: null, auto: true });
+        last = pick;
+        t = pick;
+      }
       events.sort(function (a, b) { return a.week - b.week; });
     }
 
-    var shortDays = runDays.filter(function (d) { return d !== longDay; });
+    // --- Sessões ---------------------------------------------------------
     weeksPlan.forEach(function (w) {
       var monday = start + (w.number - 1) * 7;
       w.start_date = isoDate(monday);
-      var longKm = w.target_km * R.long_pct;
-      var avgKm = (w.target_km - longKm) / (R.runs - 1);
-      w.long_km = round1(longKm);
-      w.avg_km = round1(avgKm);
       var days = [];
       for (var d = 0; d < 7; d++) days.push({ day: d, date: isoDate(monday + d), items: [] });
+      var shareByType = {};
+      mix.sessions.forEach(function (s) { shareByType[s.type] = s.share; });
       runDays.forEach(function (d) {
-        if (d === longDay) days[d].items.push(item("longao", "Longão", longKm, pct(R.long_pct) + " da semana"));
-        else days[d].items.push(item("corrida", "Corrida", avgKm, "média VSDL"));
+        days[d].items.push(sessionItem(typeByDay[d], shareByType[typeByDay[d]], w.target_km, mix));
       });
       strength.days.forEach(function (d) {
         days[d].items.push(item("forca", "Exercício resistido", null, strength.doubled.indexOf(d) >= 0 ? "depois da corrida" : ""));
       });
-      if (!w.is_race) w.reasons.push({ code: "longao", text: "Longão: " + pct(R.long_pct) + " de " + km1(w.target_km) + " km = " + km1(longKm) + " km." });
-      w.reasons.push({ code: "corridas", text: "Demais corridas: (" + km1(w.target_km) + " − " + km1(longKm) + ") ÷ " + (R.runs - 1) + " = " + km1(avgKm) + " km cada." });
+      if (!w.is_race) {
+        w.reasons.push({ code: "sessoes", text: mix.sessions.map(function (s) {
+          return (s.type === "longao" ? "Longão (CL)" : SESSION[s.type].title + (SESSION[s.type].code && s.type !== "tiros" ? " (" + SESSION[s.type].code + ")" : "")) +
+            " " + pct1(s.share) + " = " + km1(s.share * w.target_km) + " km";
+        }).join("; ") + "." });
+        w.reasons.push({ code: "tiros", text: "Tiros: " + pct1(mix.work) + " da semana = " + km1(mix.work * w.target_km) + " km (IF, IM e IL com " +
+          km1(mix.part * w.target_km) + " km cada; teto de 15%)." });
+      }
 
-      function place(day, it, removeStrength) {
-        days[day].items = days[day].items.filter(function (x) { return x.type === "forca" && !removeStrength; });
-        days[day].items.unshift(it);
+      function place(day, it) { days[day].items = [it]; }
+      function dropType(type) {
+        days.forEach(function (dd) { dd.items = dd.items.filter(function (x) { return x.type !== type; }); });
       }
-      function dropLong() {
-        days.forEach(function (dd) { dd.items = dd.items.filter(function (x) { return x.type !== "longao"; }); });
-      }
-      function dropStrengthNear(day, gap) {
-        for (var g = 0; g <= gap; g++) {
-          var dd = day - g;
-          if (dd >= 0) days[dd].items = days[dd].items.filter(function (x) { return x.type !== "forca"; });
-        }
+      function dropStrength(from, to) {
+        for (var dd = Math.max(0, from); dd <= to; dd++) days[dd].items = days[dd].items.filter(function (x) { return x.type !== "forca"; });
       }
 
       events.filter(function (e) { return e.week === w.number; }).forEach(function (e) {
         var kmText = String(Math.round(e.distance_km * 10) / 10).replace(".", ",") + " km";
         if (e.kind === "prova") {
           var dayP = e.day == null ? longDay : e.day;
-          dropLong();
-          place(dayP, item("prova", "Prova de " + kmText, e.distance_km, "no lugar do longão"), true);
-          if (dayP > 0) dropStrengthNear(dayP - 1, 0);
+          dropType("longao");
+          place(dayP, item("prova", "Prova de " + kmText, e.distance_km, "no lugar do longão"));
+          if (dayP > 0) dropStrength(dayP - 1, dayP - 1);
           w.reasons.push({ code: "prova", text: "Prova de " + kmText + " " + DAY_AT[dayP] + ", no lugar do longão." });
         } else {
-          var dayT = e.day == null ? shortDays[0] : e.day;
+          var dayT = e.day == null ? tirosDay : e.day;
+          dropType("tiros");
           place(dayT, item("teste", e.auto ? "Teste de nivelamento · " + kmText : "Teste de " + kmText,
-            e.distance_km, "no seu melhor ritmo: a velocidade média define o nível"), true);
-          w.reasons.push({ code: "teste", text: (e.auto ? "Teste de nivelamento automático (complemento)" : "Teste de " + kmText) + " " + DAY_AT[dayT] + ", no lugar de uma corrida." });
+            e.distance_km, "no seu melhor ritmo: a velocidade média define o nível"));
+          w.reasons.push({ code: "teste", text: (e.auto ? "Teste de nivelamento automático (complemento)" : "Teste de " + kmText) + " " + DAY_AT[dayT] + ", no lugar dos tiros." });
         }
       });
 
       if (w.is_race) {
-        dropLong();
+        dropType("longao");
         for (var a = raceDay + 1; a < 7; a++) days[a].items = [];
-        place(raceDay, item("prova", "PROVA · " + DISTANCE_LABEL[distance], DISTANCE_KM[distance], "prova-alvo"), true);
-        dropStrengthNear(raceDay - 1, COMPLEMENT.race_strength_gap - 1);
-        if (raceDay > 0 && days[raceDay - 1].items.some(function (x) { return x.type === "corrida"; })) {
-          days[raceDay - 1].items.forEach(function (x) { if (x.type === "corrida") x.note = "véspera da prova: bem leve"; });
+        place(raceDay, item("prova", "PROVA · " + DISTANCE_LABEL[distance], DISTANCE_KM[distance], "prova-alvo"));
+        dropStrength(raceDay - COMPLEMENT.race_strength_gap, raceDay - 1);
+        if (raceDay > 0) {
+          days[raceDay - 1].items = days[raceDay - 1].items.map(function (x) {
+            if (["cm", "cf", "tiros", "leve"].indexOf(x.type) < 0) return x;
+            return item("leve", "Rodagem leve", x.km, "véspera da prova" + (x.type !== "leve" ? ", no lugar do " + SESSION[x.type].title.toLowerCase() : ""));
+          });
         }
-        w.reasons.push({ code: "prova", text: "Semana da prova: a prova entra no lugar do longão" +
+        w.reasons.push({ code: "prova", text: "Semana da prova: a prova entra no lugar do longão e a véspera é leve" +
           (raceDay < 6 ? "; os dias depois dela ficam livres." : ".") });
       }
       days.forEach(function (dd) {
@@ -634,10 +789,10 @@
       });
       w.days = days;
       w.total_km = round1(days.reduce(function (s, dd) {
-        return s + dd.items.reduce(function (t, x) { return t + (x.km || 0); }, 0);
+        return s + dd.items.reduce(function (t2, x) { return t2 + (x.km || 0); }, 0);
       }, 0));
       w.run_count = days.reduce(function (s, dd) {
-        return s + dd.items.filter(function (x) { return ["corrida", "longao", "prova", "teste"].indexOf(x.type) >= 0; }).length;
+        return s + dd.items.filter(function (x) { return x.km; }).length;
       }, 0);
       w.strength_count = days.reduce(function (s, dd) {
         return s + dd.items.filter(function (x) { return x.type === "forca"; }).length;
@@ -666,13 +821,20 @@
         " km). O plano começa em " + km1(startKm) + " km, um salto grande para a primeira semana." });
     }
     if (reachedAt == null) {
-      warnings.push({ level: "warn", text: "Com aumento de até " + pct(COMPLEMENT.ramp_rate) + " por semana, o plano não chega à distância semanal da regra (" +
-        km1(H) + " km) antes do polimento: o pico fica em " + km1(peak) + " km." });
+      warnings.push({ level: "warn", text: "Com o modelo " + M.label.toLowerCase() + ", o plano não chega à distância semanal da regra (" +
+        km1(H) + " km) antes do polimento: o pico fica em " + km1(peak) + " km." +
+        (model === "alternado" ? " O 3:1 sobe mais rápido." : " Comece com mais volume ou aumente a duração.") });
     }
-    if (R.avg_km > R.long_km + 1e-9) {
-      warnings.push({ level: "info", text: "Nesta linha da planilha o longão (" + pct(R.long_pct) + ", " + km1(R.long_km) + " km) é menor que cada uma das outras corridas (" +
-        km1(R.avg_km) + " km): com " + R.runs + " corridas, a média VSDL fica em " + pct((1 - R.long_pct) / (R.runs - 1)) + " da semana." });
+    if (R.long_pct < COACH.continuous_min.CL - 1e-9) {
+      warnings.push({ level: "info", text: "A linha " + R.line + " pede longão de " + pct(R.long_pct) + ", abaixo do mínimo de 30% do contínuo leve (CL). O plano segue a planilha." });
     }
+    var bigger = mix.sessions.filter(function (s) { return s.type !== "longao" && s.share > R.long_pct + 1e-9; });
+    if (bigger.length) {
+      warnings.push({ level: "info", text: "Nesta linha o longão (" + pct(R.long_pct) + ") fica menor que " +
+        joinList(bigger.map(function (s) { return SESSION[s.type].title.toLowerCase() + " (" + pct1(s.share) + ")"; })) +
+        ": com " + R.runs + " corridas, a média VSDL é " + pct1(mix.equal) + " da semana." });
+    }
+    if (R.runs === 3) notes.push("Com 3 corridas não cabe o contínuo forte (CF): a semana tem longão, CM e tiros.");
     if (marked.length > R.runs) {
       notes.push("Você marcou " + marked.length + " dias; a planilha pede " + R.runs + " corridas. Dias usados: " + dayList(runDays) + ".");
     }
@@ -680,13 +842,9 @@
       notes.push("A planilha prevê " + R.weeks + " semanas; com " + total + ", o plano passa mais semanas na distância semanal da regra.");
     }
 
-    // Duração máxima do longão: sem regra na planilha; só um alerta pela velocidade de nivelamento.
+    // Duração máxima do longão: sem regra; só um alerta pela velocidade de nivelamento.
     var capMin = parseNumber(payload.long_run_max_min, "Duração máxima do longão", 10, 600);
-    var maxLong = Math.max.apply(null, weeksPlan.map(function (w) {
-      return Math.max.apply(null, w.days.map(function (dd) {
-        return Math.max.apply(null, dd.items.map(function (x) { return x.type === "longao" ? x.km : 0; }));
-      }));
-    }));
+    var maxLong = peak * R.long_pct;
     if (capMin && c.speed_kmh && maxLong / c.speed_kmh * 60 > capMin) {
       warnings.push({ level: "warn", text: "O maior longão (" + km1(maxLong) + " km) leva pelo menos " + Math.round(maxLong / c.speed_kmh * 60) +
         " min mesmo na velocidade da sua prova recente, acima do limite de " + capMin + " min. A planilha não tem limite de duração; o longão segue o percentual da regra." });
@@ -710,14 +868,14 @@
         e.time = formatTime(e.time_s);
       }
       e.date_iso = e.date != null ? isoDate(e.date) : null;
-      e.day_of_week = e.day == null ? (e.kind === "prova" ? longDay : shortDays[0]) : e.day;
+      e.day_of_week = e.day == null ? (e.kind === "prova" ? longDay : tirosDay) : e.day;
     });
     events.filter(function (e) { return e.speed_level && e.speed_level !== level; }).forEach(function (e) {
       notes.push("O " + (e.kind === "prova" ? "resultado da prova" : "teste") + " da semana " + e.week + " (" + kmh1(e.speed_kmh) + " km/h) cai no nível " +
         LEVEL_LABEL[e.speed_level].toLowerCase() + ". A planilha não diz se o nível muda no meio do plano: para seguir a nova linha, gere um plano novo com esse resultado como prova recente.");
     });
 
-    // Entradas do formulário sem regra na planilha.
+    // Entradas do formulário sem regra.
     var unused = [];
     var terrain = plain(payload.terrain || "plano"), surface = plain(payload.surface || "asfalto");
     if (terrain !== "plano" || surface !== "asfalto" || !blank(payload.elevation_gain_m)) {
@@ -739,23 +897,28 @@
     reasons.push("Linha " + R.line + " da planilha (" + SHEET_DISTANCE[distance] + ", " + LEVEL_LABEL[level].toLowerCase() + "): " + R.runs + " corridas e " + R.strength +
       " treinos de exercício resistido por semana; " + R.weeks + " semanas, mínimo " + R.min_weeks + ".");
     reasons.push("Distância semanal: " + km1(H) + " km, " + R.weekly_formula + ".");
-    reasons.push("Longão: " + pct(R.long_pct) + " da distância semanal = " + km1(R.long_km) + " km. VSDL: " + km1(H) + " − " + km1(R.long_km) + " = " + km1(R.vsdl_km) +
-      " km, em " + (R.runs - 1) + " corridas de " + km1(R.avg_km) + " km (média VSDL).");
-    reasons.push("Dias de corrida: " + dayList(runDays) + ", com o longão " + DAY_AT[longDay] + ". Exercício resistido: " + dayList(strength.days) +
+    reasons.push("Divisão da semana: " + mix.sessions.map(function (s) {
+      return (s.type === "longao" ? "longão (CL)" : SESSION[s.type].title.toLowerCase()) + " " + pct1(s.share);
+    }).join(", ") + ". A média VSDL seria " + pct1(mix.equal) + " para cada corrida; CM e CF sobem até o mínimo e a diferença sai das sessões sem mínimo.");
+    reasons.push("Tiros: " + pct1(mix.work) + " da semana (teto de 15% para IF + IM + IL), dentro de uma sessão de " + pct1(mix.tiros_share) + ".");
+    reasons.push("Dias: " + runDays.map(function (d) {
+      var t = typeByDay[d];
+      return DAY_SHORT[d] + " " + (t === "longao" ? "longão" : t === "tiros" ? "tiros" : t === "leve" ? "rodagem leve" : SESSION[t].code);
+    }).join(", ") + ". Exercício resistido: " + dayList(strength.days) +
       (strength.doubled.length ? " (" + dayList(strength.doubled) + " depois da corrida, por falta de dia livre)." : "."));
-    reasons.push("Progressão (complemento): começa em " + km1(startKm) + " km e sobe até " + pct(COMPLEMENT.ramp_rate) + " por semana" +
-      (reachedAt ? "; chega à regra na semana " + reachedAt + "." : ", sem chegar à regra antes do polimento."));
-    var cutWeeks = weeksPlan.filter(function (w) { return w.is_cutback; }).map(function (w) { return w.number; });
-    if (cutWeeks.length) reasons.push("Recuperação (complemento): semana" + (cutWeeks.length > 1 ? "s " : " ") + joinList(cutWeeks.map(String)) + " com " + pct(COMPLEMENT.cutback_fraction) + " do volume.");
-    reasons.push("Polimento (complemento): " + (nTaper === 1 ? "semana " + total : "semanas " + (nTrain + 1) + " a " + total) + " com " +
+    reasons.push("Periodização " + M.label + " (" + M.name + "): começa em " + km1(startKm) + " km" +
+      (reachedAt ? " e chega à regra na semana " + reachedAt + "." : " e não chega à regra antes do polimento."));
+    reasons.push("Polimento (complemento): " + (taperFr.length === 1 ? "semana " + total : "semanas " + (nTrain + 1) + " a " + total) + " com " +
       taperFr.map(pct).join(", ") + " do pico; a prova entra no lugar do longão.");
 
     var plan = {
       version: VERSION,
       distance: distance, distance_label: DISTANCE_LABEL[distance], sheet_distance: SHEET_DISTANCE[distance], distance_km: DISTANCE_KM[distance],
       level: level, level_label: LEVEL_LABEL[level], level_source: c.source, speed_kmh: c.speed_kmh, speed_text: c.speed_text, speed_level: c.speed_level,
-      rule: R, weeks_count: total, start_date: isoDate(start), race_date: isoDate(start + (total - 1) * 7 + raceDay), race_day: raceDay,
-      by_date: byDate, run_days: runDays, marked_days: marked, long_day: longDay, strength_days: strength.days, strength_doubled: strength.doubled,
+      rule: R, mix: mix, periodization: model, periodization_label: M.label, periodization_name: M.name,
+      weeks_count: total, start_date: isoDate(start), race_date: isoDate(start + (total - 1) * 7 + raceDay), race_day: raceDay,
+      by_date: byDate, run_days: runDays, marked_days: marked, long_day: longDay, type_by_day: typeByDay,
+      strength_days: strength.days, strength_doubled: strength.doubled,
       start_km: round1(startKm), peak_km: round1(peak), peak_long_km: peakLong, reached_week: reachedAt,
       weeks: weeksPlan, events: events, prereq: prereq, next_phase: nextPhase, goal: goal,
       warnings: warnings, notes: notes, reasons: reasons, unused_inputs: unused
@@ -766,20 +929,29 @@
 
   var PHASE_LABEL = { progressao: "Progressão", regra: "Volume da regra", polimento: "Polimento" };
 
+  function itemText(x) {
+    var head = x.title + (x.km ? " " + km1(x.km) + " km" : "");
+    if (x.parts) head += " (" + x.parts.map(function (p) { return p.label + " " + km1(p.km); }).join(", ") + ")";
+    else if (x.note) head += " (" + x.note + ")";
+    return head;
+  }
+
   function toMarkdown(plan) {
     var R = plan.rule, out = [];
     out.push("# Plano de " + plan.distance_label + " · " + plan.level_label);
     out.push("");
-    out.push("- Linha " + R.line + " da planilha: " + km1(R.weekly_km) + " km/semana, longão " + pct(R.long_pct) + " (" + km1(R.long_km) + " km), " +
-      (R.runs - 1) + " corridas de " + km1(R.avg_km) + " km, " + R.strength + " treinos de exercício resistido");
-    out.push("- " + plan.weeks_count + " semanas, de " + ddmm(parseIsoDate(plan.start_date), true) + " até a prova em " + ddmm(parseIsoDate(plan.race_date), true));
+    out.push("- Linha " + R.line + " da planilha: " + km1(R.weekly_km) + " km/semana, " + R.runs + " corridas e " + R.strength + " treinos de exercício resistido");
+    out.push("- Divisão da semana: " + plan.mix.sessions.map(function (s) {
+      return (s.type === "longao" ? "longão (CL)" : SESSION[s.type].title.toLowerCase()) + " " + pct1(s.share);
+    }).join(", ") + "; tiros " + pct1(plan.mix.work));
+    out.push("- Periodização " + plan.periodization_label + "; " + plan.weeks_count + " semanas, de " + ddmm(parseIsoDate(plan.start_date), true) +
+      " até a prova em " + ddmm(parseIsoDate(plan.race_date), true));
     plan.warnings.forEach(function (w) { out.push("- Atenção: " + w.text); });
     plan.weeks.forEach(function (w) {
       out.push("");
-      out.push("## Semana " + w.number + " · " + PHASE_LABEL[w.phase] + (w.is_cutback ? " (recuperação)" : "") + " · " + km1(w.total_km) + " km");
+      out.push("## Semana " + w.number + " · " + PHASE_LABEL[w.phase] + (KIND_LABEL[w.kind] ? " (" + KIND_LABEL[w.kind].toLowerCase() + ")" : "") + " · " + km1(w.total_km) + " km");
       w.days.forEach(function (dd) {
-        var text = dd.items.map(function (x) { return x.title + (x.km ? " " + km1(x.km) + " km" : "") + (x.note ? " (" + x.note + ")" : ""); }).join(" + ");
-        out.push("- " + DAY_SHORT[dd.day] + " " + ddmm(parseIsoDate(dd.date)) + ": " + text);
+        out.push("- " + DAY_SHORT[dd.day] + " " + ddmm(parseIsoDate(dd.date)) + ": " + dd.items.map(itemText).join(" + "));
       });
     });
     out.push("");
@@ -790,8 +962,9 @@
   return {
     VERSION: VERSION, PlanError: PlanError, LEVELS: LEVELS, LEVEL_LABEL: LEVEL_LABEL, DISTANCES: DISTANCES,
     DISTANCE_KM: DISTANCE_KM, DISTANCE_LABEL: DISTANCE_LABEL, SHEET_DISTANCE: SHEET_DISTANCE, PHASE_LABEL: PHASE_LABEL,
-    COMPLEMENT: COMPLEMENT, PREREQ: PREREQ,
-    rule: rule, sheetTable: sheetTable, levelForSpeed: levelForSpeed, levelForVolume: levelForVolume,
+    KIND_LABEL: KIND_LABEL, SESSION: SESSION, COACH: COACH, COMPLEMENT: COMPLEMENT, PREREQ: PREREQ, PERIODIZATIONS: PERIODIZATIONS,
+    rule: rule, sheetTable: sheetTable, sessionMix: sessionMix, trainingCurve: trainingCurve,
+    levelForSpeed: levelForSpeed, levelForVolume: levelForVolume,
     classify: classify, prereqStatus: prereqStatus, describeRules: describeRules,
     planFromPayload: planFromPayload, parseTime: parseTime, formatTime: formatTime
   };
