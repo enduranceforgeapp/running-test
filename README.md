@@ -15,3 +15,10 @@ node tests/test_engine.js
 ## Método
 
 - `metodo/periodizacao.html`: guia de periodização por modalidade e combinações (publicado como artifact).
+- `method_engine.js`: engine do método (corrida, ciclismo, natação com força de suporte, aquathlon, duathlon, triathlon). Todos os números de regra estão em `RULES`.
+- `metodo/simulador.html`: simulador de planejamento que usa `method_engine.js` (publicado como artifact).
+- `tests/test_method.js`: testes da engine do método.
+
+```sh
+node tests/test_method.js
+```
